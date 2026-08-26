@@ -1625,11 +1625,61 @@ const MASTER_MACRO_DRIVERS = [
     }
 ];
 
-async function fetchMacroDrivers() {
+function renderMacroDrivers(driversData) {
     const tbody = document.getElementById('macroDriversBody');
-    const timeLabel = document.getElementById('macroDriversTime');
     if (!tbody) return;
 
+    tbody.innerHTML = driversData.map(r => {
+        let priceText = '—';
+        let changeHtml = '';
+        let analysis = { status: '🟡 กำลังคำนวณ...', impact: '—' };
+
+        const priceVal = r.price != null ? r.price : r.baselinePrice;
+        if (priceVal != null) {
+            const prefix = r.unit === '$' ? '$' : '';
+            const suffix = r.unit === '%' ? '%' : '';
+            priceText = `${prefix}${priceVal.toLocaleString(undefined, { minimumFractionDigits: r.decimals, maximumFractionDigits: r.decimals })}${suffix}`;
+            
+            if (r.price != null && r.change != null) {
+                const sign = r.change >= 0 ? '+' : '';
+                const color = r.change >= 0 ? '#059669' : '#dc2626';
+                changeHtml = `<div style="font-size:0.65rem; font-weight:600; color:${color}; margin-top:2px;">${sign}${r.change.toFixed(r.decimals)} (${sign}${r.changePct.toFixed(2)}%)</div>`;
+            }
+            analysis = r.analyze(priceVal, r.change || 0, r.changePct || 0);
+        }
+
+        return `
+        <tr>
+            <td style="padding: 0.75rem 1rem; font-weight: 700; color: var(--text-primary);">
+                ${esc(r.label)}
+            </td>
+            <td style="padding: 0.75rem 1rem; text-align: center; font-family: 'Inter', monospace; font-size: 0.72rem; color: var(--text-muted);">
+                <code>${esc(r.sym)}</code>
+            </td>
+            <td style="padding: 0.75rem 1rem; text-align: right; font-family: 'Inter', monospace; font-weight: 700; color: var(--text-primary);">
+                ${priceText}
+                ${changeHtml}
+            </td>
+            <td style="padding: 0.75rem 1rem; text-align: center; font-weight: 600; font-size: 0.72rem;">
+                ${esc(analysis.status)}
+            </td>
+            <td style="padding: 0.75rem 1rem;">
+                ${analysis.impact}
+            </td>
+            <td style="padding: 0.75rem 1rem; font-size: 0.68rem; color: var(--text-secondary); line-height: 1.4;">
+                ${esc(r.desc)}
+            </td>
+        </tr>`;
+    }).join('');
+}
+
+async function fetchMacroDrivers() {
+    const timeLabel = document.getElementById('macroDriversTime');
+
+    // 1. Instant initial render so table is never empty
+    renderMacroDrivers(MASTER_MACRO_DRIVERS);
+
+    // 2. Fetch live data asynchronously for all 6 drivers
     try {
         const results = await Promise.all(MASTER_MACRO_DRIVERS.map(async d => {
             try {
@@ -1647,66 +1697,20 @@ async function fetchMacroDrivers() {
             return { ...d, price: null, change: 0, changePct: 0, ok: false };
         }));
 
-        tbody.innerHTML = results.map(r => {
-            let priceText = '—';
-            let changeHtml = '';
-            let analysis = { status: '—', impact: '—' };
-
-            if (r.price != null) {
-                const prefix = r.unit === '$' ? '$' : '';
-                const suffix = r.unit === '%' ? '%' : '';
-                priceText = `${prefix}${r.price.toLocaleString(undefined, { minimumFractionDigits: r.decimals, maximumFractionDigits: r.decimals })}${suffix}`;
-                
-                const sign = r.change >= 0 ? '+' : '';
-                const color = r.change >= 0 ? '#059669' : '#dc2626';
-                changeHtml = `<div style="font-size:0.65rem; font-weight:600; color:${color}; margin-top:2px;">${sign}${r.change.toFixed(r.decimals)} (${sign}${r.changePct.toFixed(2)}%)</div>`;
-                
-                analysis = r.analyze(r.price, r.change, r.changePct);
-            }
-
-            return `
-            <tr>
-                <td style="padding: 0.75rem 1rem; font-weight: 700; color: var(--text-primary);">
-                    ${esc(r.label)}
-                </td>
-                <td style="padding: 0.75rem 1rem; text-align: center; font-family: 'Inter', monospace; font-size: 0.72rem; color: var(--text-muted);">
-                    <code>${esc(r.sym)}</code>
-                </td>
-                <td style="padding: 0.75rem 1rem; text-align: right; font-family: 'Inter', monospace; font-weight: 700; color: var(--text-primary);">
-                    ${priceText}
-                    ${changeHtml}
-                </td>
-                <td style="padding: 0.75rem 1rem; text-align: center; font-weight: 600; font-size: 0.72rem;">
-                    ${esc(analysis.status)}
-                </td>
-                <td style="padding: 0.75rem 1rem;">
-                    ${analysis.impact}
-                </td>
-                <td style="padding: 0.75rem 1rem; font-size: 0.68rem; color: var(--text-secondary); line-height: 1.4;">
-                    ${esc(r.desc)}
-                </td>
-            </tr>`;
-        }).join('');
+        renderMacroDrivers(results);
 
         const now = new Date();
         if (timeLabel) {
             timeLabel.textContent = `อัปเดต: ${now.toLocaleTimeString('th-TH', { hour: '2-digit', minute: '2-digit' })} น.`;
         }
     } catch(e) {
-        console.warn('Macro drivers fetch failed', e);
+        console.warn('Macro drivers live fetch failed', e);
+        renderMacroDrivers(MASTER_MACRO_DRIVERS);
     }
 }
 
 async function fetchMacroData() {
-    // Fetch news for GC=F and USDTHB=X in parallel first (non-blocking for technicals)
-    const [goldNews, usdThbNews] = await Promise.all([
-        fetchTicker('GC=F').catch(e => null),
-        fetchTicker('USDTHB=X').catch(e => null)
-    ]);
-    if (goldNews) cache['GC=F'] = goldNews;
-    if (usdThbNews) cache['USDTHB=X'] = usdThbNews;
-
-    // 1. Fetch Gold Spot (GC=F)
+    // 1. Fetch Gold Spot (GC=F) immediately and asynchronously
     fetchTechnicals('GC=F').then(tech => {
         try {
             if (!tech) throw new Error('No data');
@@ -1724,18 +1728,10 @@ async function fetchMacroData() {
                     ${sign}${change.toFixed(2)} (${sign}${pct.toFixed(2)}%)
                 </span>`;
             
-            // Analyze overall sentiment including news and technicals
             const sentiment = analyzeSentiment('GC=F');
-            let trendText = sentiment.text;
-            let trendColor = 'var(--text-secondary)';
-            if (sentiment.status === 'ADD') {
-                trendColor = '#059669';
-            } else if (sentiment.status === 'TRIM') {
-                trendColor = '#dc2626';
-            }
-            document.getElementById('goldTrend').innerHTML = `แนวโน้มตอนนี้: <span style="color:${trendColor}; font-weight:700;">${trendText} (อิงข่าว & เทคนิค)</span>`;
+            let trendColor = sentiment.status === 'ADD' ? '#059669' : sentiment.status === 'TRIM' ? '#dc2626' : 'var(--text-secondary)';
+            document.getElementById('goldTrend').innerHTML = `แนวโน้มตอนนี้: <span style="color:${trendColor}; font-weight:700;">${sentiment.text} (อิงข่าว & เทคนิค)</span>`;
             
-            // Technical indicators blocks
             document.getElementById('goldTech').innerHTML = renderMacroTechnicals(tech, '$', 2);
             document.getElementById('goldEntry').innerHTML = calcMacroEntryRange(tech, '$', 2);
             
@@ -1750,7 +1746,7 @@ async function fetchMacroData() {
         }
     });
 
-    // 2. Fetch USD/THB (USDTHB=X)
+    // 2. Fetch USD/THB (USDTHB=X) immediately and asynchronously
     fetchTechnicals('USDTHB=X').then(tech => {
         try {
             if (!tech) throw new Error('No data');
@@ -1768,18 +1764,10 @@ async function fetchMacroData() {
                     ${sign}${change.toFixed(4)} (${sign}${pct.toFixed(2)}%)
                 </span>`;
             
-            // Analyze overall sentiment including news and technicals
             const sentiment = analyzeSentiment('USDTHB=X');
-            let trendText = sentiment.text;
-            let trendColor = 'var(--text-secondary)';
-            if (sentiment.status === 'ADD') {
-                trendColor = '#059669';
-            } else if (sentiment.status === 'TRIM') {
-                trendColor = '#dc2626';
-            }
-            document.getElementById('usdThbTrend').innerHTML = `แนวโน้มตอนนี้: <span style="color:${trendColor}; font-weight:700;">${trendText} (อิงข่าว & เทคนิค)</span>`;
-
-            // Technical indicators blocks
+            let trendColor = sentiment.status === 'ADD' ? '#059669' : sentiment.status === 'TRIM' ? '#dc2626' : 'var(--text-secondary)';
+            document.getElementById('usdThbTrend').innerHTML = `แนวโน้มตอนนี้: <span style="color:${trendColor}; font-weight:700;">${sentiment.text} (อิงข่าว & เทคนิค)</span>`;
+            
             document.getElementById('usdThbTech').innerHTML = renderMacroTechnicals(tech, '฿', 4);
             document.getElementById('usdThbEntry').innerHTML = calcMacroEntryRange(tech, '฿', 4);
             
@@ -1793,6 +1781,27 @@ async function fetchMacroData() {
             document.getElementById('usdThbEntry').textContent = '—';
         }
     });
+
+    // 3. Fetch news in parallel background without blocking price/technicals
+    fetchTicker('GC=F').then(news => {
+        if (news) {
+            cache['GC=F'] = news;
+            const sentiment = analyzeSentiment('GC=F');
+            let trendColor = sentiment.status === 'ADD' ? '#059669' : sentiment.status === 'TRIM' ? '#dc2626' : 'var(--text-secondary)';
+            const el = document.getElementById('goldTrend');
+            if (el) el.innerHTML = `แนวโน้มตอนนี้: <span style="color:${trendColor}; font-weight:700;">${sentiment.text} (อิงข่าว & เทคนิค)</span>`;
+        }
+    }).catch(e => {});
+
+    fetchTicker('USDTHB=X').then(news => {
+        if (news) {
+            cache['USDTHB=X'] = news;
+            const sentiment = analyzeSentiment('USDTHB=X');
+            let trendColor = sentiment.status === 'ADD' ? '#059669' : sentiment.status === 'TRIM' ? '#dc2626' : 'var(--text-secondary)';
+            const el = document.getElementById('usdThbTrend');
+            if (el) el.innerHTML = `แนวโน้มตอนนี้: <span style="color:${trendColor}; font-weight:700;">${sentiment.text} (อิงข่าว & เทคนิค)</span>`;
+        }
+    }).catch(e => {});
 }
 
 /* ══════════════════════════════════════════
