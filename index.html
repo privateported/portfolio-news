@@ -502,6 +502,44 @@
                 </tbody>
             </table>
         </div>
+
+        <!-- Separator -->
+        <div style="border-top: 1px dashed var(--border); margin: 1.35rem 0 1rem;"></div>
+
+        <!-- ═══ SECTION 2: 6 GLOBAL MACRO DRIVERS ═══ -->
+        <div style="display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 0.6rem; margin-bottom: 0.75rem;">
+            <div style="display: flex; align-items: center; gap: 0.5rem;">
+                <span style="font-size: 1.2rem;">🌐</span>
+                <div>
+                    <h4 style="font-size: 0.88rem; font-weight: 700; color: var(--text-primary); line-height: 1.25;">
+                        6 ตัวแปรมหภาคสำคัญชี้นำตลาดโลก (Global Macro Drivers & Real-Time Impact)
+                    </h4>
+                    <p style="font-size: 0.68rem; color: var(--text-muted); margin-top: 2px;">
+                        ติดตามอัตราผลตอบแทนพันธบัตร 10 ปี, ดอลลาร์ DXY, ดัชนีความกลัว VIX, น้ำมันดิบ, S&P 500 และราคาทองคำ แบบ Real-Time
+                    </p>
+                </div>
+            </div>
+            <span id="macroDriversTime" style="font-size: 0.65rem; color: var(--text-muted);">อัปเดต: กำลังโหลด...</span>
+        </div>
+
+        <!-- Macro Drivers Table Container -->
+        <div class="table-container" style="border-radius: 8px;">
+            <table class="summary-table" style="font-size: 0.75rem;">
+                <thead>
+                    <tr>
+                        <th style="width: 22%">ตัวแปรมหภาค (Macro Driver)</th>
+                        <th style="width: 10%; text-align: center;">สัญลักษณ์</th>
+                        <th style="width: 14%; text-align: right;">ค่าปัจจุบัน (Live Value)</th>
+                        <th style="width: 14%; text-align: center;">ระดับความเสี่ยง / สถานะ</th>
+                        <th style="width: 24%">ผลกระทบต่อตลาด (Market Impact)</th>
+                        <th style="width: 16%">คำอธิบาย & นัยสำคัญ</th>
+                    </tr>
+                </thead>
+                <tbody id="macroDriversBody">
+                    <tr><td colspan="6" style="text-align: center; padding: 1.5rem; color: var(--text-muted);">⏳ กำลังดึงข้อมูลตัวแปรมหภาค Real-Time...</td></tr>
+                </tbody>
+            </table>
+        </div>
     </div>
 </section>
 
@@ -1011,6 +1049,7 @@ async function fetchAll(forceRefresh=false) {
     await fetchPrices(); // Fetch stock prices in background
     fetchMacroData();
     fetchMacroCalendar();
+    fetchMacroDrivers();
     renderSummaryTable();
     updateLastTime(new Date());
     setProgress(100);
@@ -1449,6 +1488,210 @@ async function fetchMacroCalendar() {
     } catch(e) {
         console.warn('Macro calendar live update failed, showing master dataset', e);
         renderMacroCalendar(MASTER_MACRO_INDICATORS);
+    }
+/* ══════════════════════════════════════════
+   GLOBAL MACRO DRIVERS (REAL-TIME ENGINE)
+══════════════════════════════════════════ */
+const MASTER_MACRO_DRIVERS = [
+    {
+        sym: '^TNX',
+        name: 'US 10-Year Treasury Yield',
+        label: '🇺🇸 Bond Yield 10 ปี (US10Y)',
+        unit: '%',
+        decimals: 3,
+        desc: 'ต้นทุนการเงินโลก & Discount Rate หุ้น Tech',
+        analyze: (p) => {
+            if (p < 4.0) return {
+                status: '🟢 ผ่อนคลาย (Yield ต่ำ)',
+                impact: '🟢 <strong>บวกแรงต่อหุ้น Tech & ทองคำ</strong><br><span style="font-size:0.65rem; color:var(--text-secondary);">ต้นทุนการเงินโลกลดลง หนุนเงินเข้าสินทรัพย์เสี่ยง</span>'
+            };
+            if (p <= 4.5) return {
+                status: '🟡 ปกติ/สมดุล',
+                impact: '⚪ <strong>ผลกระทบเป็นกลาง</strong><br><span style="font-size:0.65rem; color:var(--text-secondary);">ตลาดเคลื่อนไหวตามผลประกอบการและพื้นฐาน</span>'
+            };
+            return {
+                status: '🔴 ตึงตัว (Yield สูง)',
+                impact: '🔴 <strong>กดดันหุ้น Growth/Tech</strong><br><span style="font-size:0.65rem; color:var(--text-secondary);">ดึงเงินออกจากตลาดหุ้น/ทองคำไปพักในพันธบัตร</span>'
+            };
+        }
+    },
+    {
+        sym: 'DX-Y.NYB',
+        name: 'US Dollar Index (DXY)',
+        label: '💵 ดัชนีดอลลาร์ (DXY Index)',
+        unit: '',
+        decimals: 2,
+        desc: 'ทิศทาง Fund Flow โลก (ดอลลาร์อ่อน = เงินเข้าหุ้น/ทอง)',
+        analyze: (p) => {
+            if (p < 100) return {
+                status: '🟢 ดอลลาร์อ่อนค่า',
+                impact: '🟢 <strong>บวกต่อทองคำ & หุ้นไทย (Fund Flow ไหลเข้า)</strong><br><span style="font-size:0.65rem; color:var(--text-secondary);">เงินดอลลาร์กระจายตัวสู่ตลาดเกิดใหม่และสินค้าโภคภัณฑ์</span>'
+            };
+            if (p <= 104) return {
+                status: '🟡 ดอลลาร์ทรงตัว',
+                impact: '⚪ <strong>ผลกระทบปกติ</strong><br><span style="font-size:0.65rem; color:var(--text-secondary);">กระแสเงินเคลื่อนไหวในกรอบปกติ</span>'
+            };
+            return {
+                status: '🔴 ดอลลาร์แข็งค่า',
+                impact: '🔴 <strong>กดดันราคาทองคำ & หุ้นไทย</strong><br><span style="font-size:0.65rem; color:var(--text-secondary);">ดึงสภาพคล่องโลกกลับเข้าถือครองสกุลเงินดอลลาร์</span>'
+            };
+        }
+    },
+    {
+        sym: '^VIX',
+        name: 'CBOE Volatility Index (VIX)',
+        label: '😱 ดัชนีความกลัว (VIX Index)',
+        unit: '',
+        decimals: 2,
+        desc: 'ความผันผวน S&P 500 (>30 = Panic / จังหวะซื้อ)',
+        analyze: (p) => {
+            if (p < 15) return {
+                status: '🟢 Risk-On (มั่นใจสูง)',
+                impact: '🟢 <strong>ตลาดกระทิง / นักลงทุนกล้าเสี่ยง</strong><br><span style="font-size:0.65rem; color:var(--text-secondary);">ความผันผวนต่ำ เอื้อต่อการปรับตัวขึ้นของหุ้น</span>'
+            };
+            if (p <= 20) return {
+                status: '🟡 ภาวะปกติ (Normal)',
+                impact: '⚪ <strong>ตลาดแกว่งตัวในกรอบปกติ</strong><br><span style="font-size:0.65rem; color:var(--text-secondary);">ไม่มีความกังวลผิดปกติ</span>'
+            };
+            if (p <= 30) return {
+                status: '🟠 ตึงตัว (Caution)',
+                impact: '🟠 <strong>ตลาดเริ่มผันผวน / ปรับพอร์ต</strong><br><span style="font-size:0.65rem; color:var(--text-secondary);">เริ่มมีแรงขายทำกำไรหรือลดความเสี่ยง</span>'
+            };
+            return {
+                status: '🔴 Panic / Extreme Fear',
+                impact: '🔴 <strong>เกิดแรงเทขายตกใจกลัว</strong><br><span style="font-size:0.65rem; color:var(--text-secondary);">มักเป็นจุดกลับตัวสะสมของถูกระยะยาว</span>'
+            };
+        }
+    },
+    {
+        sym: 'CL=F',
+        name: 'Crude Oil WTI',
+        label: '🛢️ ราคาน้ำมันดิบ WTI (Crude Oil)',
+        unit: '$',
+        decimals: 2,
+        desc: 'ต้นทุนพลังงานโลก (พุ่ง >$85 เสี่ยงเงินเฟ้อกลับมา)',
+        analyze: (p) => {
+            if (p < 75) return {
+                status: '🟢 น้ำมันชะลอตัว',
+                impact: '🟢 <strong>ลดแรงกดดันเงินเฟ้อ หนุน Fed ลดดอกเบี้ย</strong><br><span style="font-size:0.65rem; color:var(--text-secondary);">ต้นทุนขนส่งและพลังงานลดลง หนุนกำไรบริษัท</span>'
+            };
+            if (p <= 85) return {
+                status: '🟡 กรอบสมดุล',
+                impact: '⚪ <strong>ผลกระทบอยู่ในเกณฑ์ควบคุมได้</strong><br><span style="font-size:0.65rem; color:var(--text-secondary);">ไม่เป็นภัยคุกคามต่อเงินเฟ้อ</span>'
+            };
+            return {
+                status: '🔴 น้ำมันพุ่งสูง',
+                impact: '🔴 <strong>เสี่ยงจุดชนวนเงินเฟ้อรอบ 2</strong><br><span style="font-size:0.65rem; color:var(--text-secondary);">อาจทำให้ Fed ชะลอการลดดอกเบี้ยลง</span>'
+            };
+        }
+    },
+    {
+        sym: '^GSPC',
+        name: 'S&P 500 Index',
+        label: '📈 ดัชนี S&P 500 (US Market)',
+        unit: '',
+        decimals: 2,
+        desc: 'ดัชนีหุ้นหลักของโลก สะท้อนความเชื่อมั่นนักลงทุน',
+        analyze: (p, chg, pct) => {
+            if (pct >= 0) return {
+                status: '🟢 ตลาดสหรัฐฯ บวก',
+                impact: '🟢 <strong>หนุน Sentiment ตลาดหุ้นทั่วโลก</strong><br><span style="font-size:0.65rem; color:var(--text-secondary);">บรรยากาศการลงทุนเปิดรับความเสี่ยง (Bullish)</span>'
+            };
+            return {
+                status: '🔴 ตลาดสหรัฐฯ พักฐาน',
+                impact: '🔴 <strong>บรรยากาศการลงทุนระมัดระวัง</strong><br><span style="font-size:0.65rem; color:var(--text-secondary);">อาจมีแรงกดดันต่อตลาดหุ้นภูมิภาค</span>'
+            };
+        }
+    },
+    {
+        sym: 'GC=F',
+        name: 'Gold Spot (USD/oz)',
+        label: '🥇 ราคาทองคำโลก (Gold Spot)',
+        unit: '$',
+        decimals: 2,
+        desc: 'สินทรัพย์ปลอดภัยสากล & ทุนสำรองธนาคารกลาง',
+        analyze: (p, chg, pct) => {
+            if (pct >= 0) return {
+                status: '🟢 ทองคำขาขึ้น',
+                impact: '🟢 <strong>หนุนกลุ่มสินทรัพย์ปลอดภัย & หุ้นทองคำ</strong><br><span style="font-size:0.65rem; color:var(--text-secondary);">สะท้อนแรงซื้อสะสมของธนาคารกลางโลก</span>'
+            };
+            return {
+                status: '🔴 ทองคำพักตัว',
+                impact: '🔴 <strong>แรงขายทำกำไรระยะสั้น</strong><br><span style="font-size:0.65rem; color:var(--text-secondary);">การพักฐานตามรอบการเก็งกำไร</span>'
+            };
+        }
+    }
+];
+
+async function fetchMacroDrivers() {
+    const tbody = document.getElementById('macroDriversBody');
+    const timeLabel = document.getElementById('macroDriversTime');
+    if (!tbody) return;
+
+    try {
+        const results = await Promise.all(MASTER_MACRO_DRIVERS.map(async d => {
+            try {
+                const url = 'https://query2.finance.yahoo.com/v8/finance/chart/' + encodeURIComponent(d.sym) + '?interval=1d&range=1d';
+                const res = await fetchJsonWithProxy(url, 6000);
+                if (res && res.chart && res.chart.result && res.chart.result[0]) {
+                    const meta = res.chart.result[0].meta;
+                    const price = meta.regularMarketPrice;
+                    const prev = meta.previousClose || meta.chartPreviousClose || price;
+                    const change = price && prev ? price - prev : 0;
+                    const changePct = prev ? (change / prev) * 100 : 0;
+                    return { ...d, price, change, changePct, ok: true };
+                }
+            } catch(e) {}
+            return { ...d, price: null, change: 0, changePct: 0, ok: false };
+        }));
+
+        tbody.innerHTML = results.map(r => {
+            let priceText = '—';
+            let changeHtml = '';
+            let analysis = { status: '—', impact: '—' };
+
+            if (r.price != null) {
+                const prefix = r.unit === '$' ? '$' : '';
+                const suffix = r.unit === '%' ? '%' : '';
+                priceText = `${prefix}${r.price.toLocaleString(undefined, { minimumFractionDigits: r.decimals, maximumFractionDigits: r.decimals })}${suffix}`;
+                
+                const sign = r.change >= 0 ? '+' : '';
+                const color = r.change >= 0 ? '#059669' : '#dc2626';
+                changeHtml = `<div style="font-size:0.65rem; font-weight:600; color:${color}; margin-top:2px;">${sign}${r.change.toFixed(r.decimals)} (${sign}${r.changePct.toFixed(2)}%)</div>`;
+                
+                analysis = r.analyze(r.price, r.change, r.changePct);
+            }
+
+            return `
+            <tr>
+                <td style="padding: 0.75rem 1rem; font-weight: 700; color: var(--text-primary);">
+                    ${esc(r.label)}
+                </td>
+                <td style="padding: 0.75rem 1rem; text-align: center; font-family: 'Inter', monospace; font-size: 0.72rem; color: var(--text-muted);">
+                    <code>${esc(r.sym)}</code>
+                </td>
+                <td style="padding: 0.75rem 1rem; text-align: right; font-family: 'Inter', monospace; font-weight: 700; color: var(--text-primary);">
+                    ${priceText}
+                    ${changeHtml}
+                </td>
+                <td style="padding: 0.75rem 1rem; text-align: center; font-weight: 600; font-size: 0.72rem;">
+                    ${esc(analysis.status)}
+                </td>
+                <td style="padding: 0.75rem 1rem;">
+                    ${analysis.impact}
+                </td>
+                <td style="padding: 0.75rem 1rem; font-size: 0.68rem; color: var(--text-secondary); line-height: 1.4;">
+                    ${esc(r.desc)}
+                </td>
+            </tr>`;
+        }).join('');
+
+        const now = new Date();
+        if (timeLabel) {
+            timeLabel.textContent = `อัปเดต: ${now.toLocaleTimeString('th-TH', { hour: '2-digit', minute: '2-digit' })} น.`;
+        }
+    } catch(e) {
+        console.warn('Macro drivers fetch failed', e);
     }
 }
 
@@ -2796,10 +3039,12 @@ function startTickers() {
     updateMarketStatus();
     fetchMacroData(); // initial fetch
     fetchMacroCalendar(); // initial macro calendar fetch
+    fetchMacroDrivers(); // initial macro drivers fetch
     setInterval(updateCountdown, 1000); // update countdown every second
     setInterval(()=>{
         updateMarketStatus();
         fetchMacroData(); // refresh gold/forex every minute
+        fetchMacroDrivers(); // refresh macro drivers every minute
         if (!isFetching && needsRefresh(new Date().toISOString())) fetchAll(true);
     }, 60_000); // check every minute
     setInterval(fetchMacroCalendar, 300_000); // refresh macro calendar every 5 minutes
@@ -2813,6 +3058,7 @@ function startTickers() {
     renderSummaryTable();
     renderTradingViewWidget();
     fetchMacroCalendar();
+    fetchMacroDrivers();
 
     const saved = restoreCache();
     if (saved && !needsRefresh(saved.ts)) {
