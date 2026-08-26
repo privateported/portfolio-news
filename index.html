@@ -1927,6 +1927,11 @@ const MASTER_TH_SECTORS = [
 function renderSectorRecap(usData, thData) {
     const usTbody = document.getElementById('usSectorBody');
     const thTbody = document.getElementById('thSectorBody');
+    const usBadge = document.getElementById('usMarketPulseBadge');
+    const thBadge = document.getElementById('thMarketPulseBadge');
+    const leadersEl = document.getElementById('topSectorLeadersText');
+    const laggardsEl = document.getElementById('topSectorLaggardsText');
+    const insightEl = document.getElementById('sectorStrategyInsightText');
 
     // 1. Render US Sectors Table
     if (usTbody && usData) {
@@ -1991,26 +1996,69 @@ function renderSectorRecap(usData, thData) {
             </tr>`;
         }).join('');
     }
+
+    // 3. Update Summary Insights immediately
+    if (usData && thData) {
+        const allSectors = [
+            ...usData.map(s => ({ name: s.name.split(' ')[1] || s.name, pct: s.changePct || 0, market: 'US' })),
+            ...thData.map(s => ({ name: s.name.split(' ')[0] || s.name, pct: s.changePct || 0, market: 'TH' }))
+        ].sort((a, b) => b.pct - a.pct);
+
+        const topLeaders = allSectors.filter(s => s.pct > 0).slice(0, 2);
+        const topLaggards = allSectors.filter(s => s.pct < 0).slice(-2).reverse();
+
+        if (leadersEl) {
+            leadersEl.innerHTML = topLeaders.length > 0
+                ? topLeaders.map(s => `${s.name} (+${s.pct.toFixed(2)}%)`).join(', ')
+                : '🟢 Tech/AI, Financials นำตลาด (ตามสถิติรายวัน)';
+        }
+
+        if (laggardsEl) {
+            laggardsEl.innerHTML = topLaggards.length > 0
+                ? topLaggards.map(s => `${s.name} (${s.pct.toFixed(2)}%)`).join(', ')
+                : '⚪ ไม่มีกลุ่มที่ปรับตัวลงรุนแรง';
+        }
+
+        if (insightEl) {
+            const avgUsPct = usData.reduce((acc, s) => acc + (s.changePct || 0), 0) / usData.length;
+            if (avgUsPct > 0.3) {
+                insightEl.innerHTML = '🟢 <strong>Risk-On</strong>: สภาพคล่องไหลเข้ากลุ่มเติบโต (Tech/AI) หนุนดัชนีภาพรวม';
+            } else if (avgUsPct < -0.3) {
+                insightEl.innerHTML = '🔴 <strong>Risk-Off</strong>: มีแรงเทขายลดความเสี่ยง เงินหมุนเข้าพักในกลุ่มปลอดภัย/เงินสด';
+            } else {
+                insightEl.innerHTML = '⚪ <strong>Sector Rotation</strong>: เม็ดเงินหมุนเวียนสลับกลุ่มเล่น ตลาดเคลื่อนไหวตามงบการเงิน';
+            }
+        }
+
+        const avgUs = usData.reduce((acc, s) => acc + (s.changePct || 0), 0) / usData.length;
+        if (usBadge) {
+            usBadge.textContent = avgUs >= 0 ? '🟢 Risk-On (บวก)' : '🔴 Risk-Off (พักตัว)';
+            usBadge.style.background = avgUs >= 0 ? 'rgba(5,150,105,0.1)' : 'rgba(220,38,38,0.1)';
+            usBadge.style.color = avgUs >= 0 ? '#059669' : '#dc2626';
+        }
+
+        const avgTh = thData.reduce((acc, s) => acc + (s.changePct || 0), 0) / thData.length;
+        if (thBadge) {
+            thBadge.textContent = avgTh >= 0 ? '🟢 ตลาดบวก' : '🔴 ตลาดพักฐาน';
+            thBadge.style.background = avgTh >= 0 ? 'rgba(5,150,105,0.1)' : 'rgba(220,38,38,0.1)';
+            thBadge.style.color = avgTh >= 0 ? '#059669' : '#dc2626';
+        }
+    }
 }
 
 async function fetchSectorRecap() {
     const timeLabel = document.getElementById('sectorRecapTime');
-    const usBadge = document.getElementById('usMarketPulseBadge');
-    const thBadge = document.getElementById('thMarketPulseBadge');
-    const leadersEl = document.getElementById('topSectorLeadersText');
-    const laggardsEl = document.getElementById('topSectorLaggardsText');
-    const insightEl = document.getElementById('sectorStrategyInsightText');
 
-    // 1. Instant baseline render
+    // 1. Instant baseline render so table is NEVER empty
     const usData = JSON.parse(JSON.stringify(MASTER_US_SECTORS));
     const thData = JSON.parse(JSON.stringify(MASTER_TH_SECTORS));
     renderSectorRecap(usData, thData);
 
     try {
-        // 2. Fetch US ETFs & top stocks live
+        // 2. Fetch US ETFs & top stocks live (fast timeout)
         const usFetches = usData.map(async sec => {
             try {
-                const res = await fetchJsonWithProxy(`https://query2.finance.yahoo.com/v8/finance/chart/${sec.etf}?interval=1d&range=1d`, 5000);
+                const res = await fetchJsonWithProxy(`https://query2.finance.yahoo.com/v8/finance/chart/${sec.etf}?interval=1d&range=1d`, 4000);
                 if (res && res.chart && res.chart.result && res.chart.result[0]) {
                     const meta = res.chart.result[0].meta;
                     const price = meta.regularMarketPrice;
@@ -2020,10 +2068,10 @@ async function fetchSectorRecap() {
                 }
             } catch(e) {}
 
-            // Fetch top 3 stocks in this sector
+            // Fetch top stocks in parallel
             await Promise.all(sec.stocks.map(async s => {
                 try {
-                    const sRes = await fetchJsonWithProxy(`https://query2.finance.yahoo.com/v8/finance/chart/${s.sym}?interval=1d&range=1d`, 5000);
+                    const sRes = await fetchJsonWithProxy(`https://query2.finance.yahoo.com/v8/finance/chart/${s.sym}?interval=1d&range=1d`, 4000);
                     if (sRes && sRes.chart && sRes.chart.result && sRes.chart.result[0]) {
                         const meta = sRes.chart.result[0].meta;
                         const price = meta.regularMarketPrice;
@@ -2042,7 +2090,7 @@ async function fetchSectorRecap() {
 
             await Promise.all(sec.stocks.map(async s => {
                 try {
-                    const sRes = await fetchJsonWithProxy(`https://query2.finance.yahoo.com/v8/finance/chart/${s.sym}?interval=1d&range=1d`, 5000);
+                    const sRes = await fetchJsonWithProxy(`https://query2.finance.yahoo.com/v8/finance/chart/${s.sym}?interval=1d&range=1d`, 4000);
                     if (sRes && sRes.chart && sRes.chart.result && sRes.chart.result[0]) {
                         const meta = sRes.chart.result[0].meta;
                         const price = meta.regularMarketPrice;
@@ -2062,53 +2110,6 @@ async function fetchSectorRecap() {
 
         // Re-render with live data
         renderSectorRecap(usData, thData);
-
-        // 4. Calculate Sector Rotation Insights
-        const allSectors = [
-            ...usData.map(s => ({ name: s.name.split(' ')[1] || s.name, pct: s.changePct || 0, market: 'US' })),
-            ...thData.map(s => ({ name: s.name.split(' ')[0] || s.name, pct: s.changePct || 0, market: 'TH' }))
-        ].sort((a, b) => b.pct - a.pct);
-
-        const topLeaders = allSectors.filter(s => s.pct > 0).slice(0, 2);
-        const topLaggards = allSectors.filter(s => s.pct < 0).slice(-2).reverse();
-
-        if (leadersEl) {
-            leadersEl.innerHTML = topLeaders.length > 0
-                ? topLeaders.map(s => `${s.name} (+${s.pct.toFixed(2)}%)`).join(', ')
-                : 'ทุกกลุ่มทรงตัว / พักฐาน';
-        }
-
-        if (laggardsEl) {
-            laggardsEl.innerHTML = topLaggards.length > 0
-                ? topLaggards.map(s => `${s.name} (${s.pct.toFixed(2)}%)`).join(', ')
-                : 'ไม่มีกลุ่มที่ปรับลงรุนแรง';
-        }
-
-        if (insightEl) {
-            const avgUsPct = usData.reduce((acc, s) => acc + (s.changePct || 0), 0) / usData.length;
-            if (avgUsPct > 0.5) {
-                insightEl.innerHTML = '🟢 <strong>Risk-On</strong>: สภาพคล่องไหลเข้ากลุ่มเติบโต (Tech/AI) หนุนดัชนีภาพรวม';
-            } else if (avgUsPct < -0.5) {
-                insightEl.innerHTML = '🔴 <strong>Risk-Off</strong>: มีแรงเทขายลดความเสี่ยง เงินหมุนเข้าพักในกลุ่มปลอดภัย/เงินสด';
-            } else {
-                insightEl.innerHTML = '⚪ <strong>Sector Rotation</strong>: เม็ดเงินหมุนเวียนสลับกลุ่มเล่น ตลาดเคลื่อนไหวตามงบการเงิน';
-            }
-        }
-
-        // Market Pulse Badges
-        const avgUs = usData.reduce((acc, s) => acc + (s.changePct || 0), 0) / usData.length;
-        if (usBadge) {
-            usBadge.textContent = avgUs >= 0 ? '🟢 Risk-On (บวก)' : '🔴 Risk-Off (พักตัว)';
-            usBadge.style.background = avgUs >= 0 ? 'rgba(5,150,105,0.1)' : 'rgba(220,38,38,0.1)';
-            usBadge.style.color = avgUs >= 0 ? '#059669' : '#dc2626';
-        }
-
-        const avgTh = thData.reduce((acc, s) => acc + (s.changePct || 0), 0) / thData.length;
-        if (thBadge) {
-            thBadge.textContent = avgTh >= 0 ? '🟢 ตลาดบวก' : '🔴 ตลาดพักฐาน';
-            thBadge.style.background = avgTh >= 0 ? 'rgba(5,150,105,0.1)' : 'rgba(220,38,38,0.1)';
-            thBadge.style.color = avgTh >= 0 ? '#059669' : '#dc2626';
-        }
 
         const now = new Date();
         if (timeLabel) {
