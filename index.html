@@ -731,23 +731,58 @@ let isWidgetVisible = true;
    3) Last resort: CORS proxy + client-side XML parser
    No AbortSignal used — max browser compatibility
 ══════════════════════════════════════════ */
-async function fetchXmlWithProxy(targetUrl) {
-    const proxies = [
-        url => `https://corsproxy.io/?${encodeURIComponent(url)}`,
-        url => `https://api.allorigins.win/raw?url=${encodeURIComponent(url)}`,
-        url => `https://api.codetabs.com/v1/proxy?quest=${encodeURIComponent(url)}`
-    ];
-    for (const getProxyUrl of proxies) {
+/* ══════════════════════════════════════════
+   MULTI-LAYER PROXY & NETWORK HELPERS
+   Tries fast, reliable CORS proxies in order
+══════════════════════════════════════════ */
+const CORS_PROXIES = [
+    url => `https://cors.isteed.cc/${url}`,
+    url => `https://proxy.cors.sh/${url}`,
+    url => `https://cors-anywhere.fly.dev/${url}`,
+    url => `https://api.allorigins.win/raw?url=${encodeURIComponent(url)}`,
+    url => `https://api.codetabs.com/v1/proxy?quest=${encodeURIComponent(url)}`
+];
+
+async function fetchWithProxy(targetUrl, timeoutMs = 6000) {
+    for (const getProxyUrl of CORS_PROXIES) {
         try {
-            const r = await fetch(getProxyUrl(targetUrl));
-            if (r.ok) {
+            const proxyUrl = getProxyUrl(targetUrl);
+            const timeout = new Promise((_, rej) => setTimeout(() => rej(new Error('timeout')), timeoutMs));
+            const r = await Promise.race([fetch(proxyUrl), timeout]);
+            if (r && r.ok) {
                 const text = await r.text();
-                if (text && (text.includes('<rss') || text.includes('<channel') || text.includes('<feed'))) {
+                if (text && (text.includes('<rss') || text.includes('<channel') || text.includes('<feed') || (!text.includes('<!DOCTYPE') && !text.includes('<html')))) {
                     return text;
                 }
             }
         } catch (e) { /* try next proxy */ }
     }
+    return null;
+}
+
+async function fetchJsonWithProxy(targetUrl, timeoutMs = 6000) {
+    for (const getProxyUrl of CORS_PROXIES) {
+        try {
+            const proxyUrl = getProxyUrl(targetUrl);
+            const timeout = new Promise((_, rej) => setTimeout(() => rej(new Error('timeout')), timeoutMs));
+            const r = await Promise.race([fetch(proxyUrl), timeout]);
+            if (r && r.ok) {
+                const text = await r.text();
+                if (text && text.trim().startsWith('{')) {
+                    try {
+                        const json = JSON.parse(text);
+                        return json;
+                    } catch (e) {}
+                }
+            }
+        } catch (e) { /* try next proxy */ }
+    }
+    return null;
+}
+
+async function fetchXmlWithProxy(targetUrl) {
+    const text = await fetchWithProxy(targetUrl);
+    if (text) return text;
     throw new Error('All proxies failed');
 }
 
@@ -770,23 +805,22 @@ async function fetchTicker(symbol) {
     const region  = isThai ? 'TH&lang=th-TH' : 'US&lang=en-US';
 
     /* safe fetch with timeout — compatible with ALL browsers (no AbortSignal needed) */
-    const safeFetchJson = async (url, ms = 9000) => {
+    const safeFetchJson = async (url, ms = 5000) => {
         try {
             const timeout = new Promise((_, rej) => setTimeout(() => rej(new Error('timeout')), ms));
             const r = await Promise.race([fetch(url), timeout]);
-            if (r.ok) return await r.json();
+            if (r && r.ok) return await r.json();
         } catch(e) {}
         return null;
     };
 
     let items = [];
 
-    /* ── 1. For non-Thai stocks: Try Yahoo Finance Search API via CORS Proxy (extremely fast & robust) ── */
+    /* ── 1. For non-Thai stocks: Try Yahoo Finance Search API via Multi-Proxy (fast & robust) ── */
     if (!isThai) {
         try {
             const yfSearchUrl = `https://query2.finance.yahoo.com/v1/finance/search?q=${encodeURIComponent(symbol)}`;
-            const proxyUrl = `https://corsproxy.io/?${encodeURIComponent(yfSearchUrl)}`;
-            const d = await safeFetchJson(proxyUrl, 4000); // 4 seconds timeout
+            const d = await fetchJsonWithProxy(yfSearchUrl, 4000);
             if (d && d.news && d.news.length > 0) {
                 items = d.news.map(item => ({
                     title: item.title || '',
@@ -805,7 +839,7 @@ async function fetchTicker(symbol) {
         const yahooRss = `https://feeds.finance.yahoo.com/rss/2.0/headline?s=${symbol}&region=${region}`;
         const yahooData = await safeFetchJson(
             `https://api.rss2json.com/v1/api.json?rss_url=${encodeURIComponent(yahooRss)}&count=10`,
-            5000 // 5 seconds timeout
+            4000
         );
         if (yahooData?.status === 'ok' && yahooData.items?.length > 0) {
             items = yahooData.items;
@@ -826,14 +860,14 @@ async function fetchTicker(symbol) {
         const gRss = `https://news.google.com/rss/search?q=${encodeURIComponent(rawQ)}&hl=${hl}&gl=${gl}&ceid=${ceid}`;
         const gData = await safeFetchJson(
             `https://api.rss2json.com/v1/api.json?rss_url=${encodeURIComponent(gRss)}&count=10`,
-            5000 // 5 seconds timeout
+            4000
         );
         if (gData?.status === 'ok' && gData.items?.length > 0) {
             items = gData.items;
         }
     }
 
-    /* ── 4. Last resort: CORS proxy + client-side XML parser ── */
+    /* ── 4. Last resort: Multi-Proxy + client-side XML parser ── */
     if (items.length === 0) {
         try {
             let rawQ = isThai ? `${symbol.replace('.BK','')} หุ้น` : `${symbol} stock`;
@@ -1002,21 +1036,21 @@ async function fetchPrices() {
         }
     }
 
-    // B. Fallback: Yahoo Finance via corsproxy.io — fire-and-forget with timeout
-    symbols.forEach(sym => {
-        const url = `https://corsproxy.io/?${encodeURIComponent('https://query2.finance.yahoo.com/v8/finance/chart/' + sym + '?interval=1d&range=1d')}`;
-        safeGet(url, 10000).then(d => {
-            try {
+    // B. Fallback: Yahoo Finance via multi-proxy
+    symbols.forEach(async sym => {
+        const url = 'https://query2.finance.yahoo.com/v8/finance/chart/' + encodeURIComponent(sym) + '?interval=1d&range=1d';
+        try {
+            const d = await fetchJsonWithProxy(url, 6000);
+            if (d && d.chart && d.chart.result && d.chart.result[0]) {
                 const price = d.chart.result[0].meta.regularMarketPrice;
-                const prev  = d.chart.result[0].meta.previousClose;
                 if (price) {
                     const curr = sym.endsWith('.BK') ? '฿' : '$';
                     livePrices[sym] = curr + parseFloat(price).toFixed(2);
                     const cell = document.getElementById(`price-${sym}`);
                     if (cell) cell.textContent = livePrices[sym];
                 }
-            } catch(e) {}
-        });
+            }
+        } catch(e) {}
     });
 }
 
@@ -1457,22 +1491,17 @@ async function loadAndRenderChart(symbol, period) {
     });
 
     const { interval, range } = CHART_RANGES[period];
-    const proxyBase = 'https://corsproxy.io/?';
     const yfUrl = `https://query2.finance.yahoo.com/v8/finance/chart/${encodeURIComponent(symbol)}?interval=${interval}&range=${range}&includePrePost=false`;
 
     let timestamps = [], closes = [], meta = null;
 
     try {
-        const timeout = new Promise((_, rej) => setTimeout(() => rej(new Error('timeout')), 10000));
-        const r = await Promise.race([fetch(proxyBase + encodeURIComponent(yfUrl)), timeout]);
-        if (r.ok) {
-            const d = await r.json();
-            const result = d?.chart?.result?.[0];
-            if (result) {
-                meta       = result.meta;
-                timestamps = result.timestamp || [];
-                closes     = result.indicators?.quote?.[0]?.close || [];
-            }
+        const d = await fetchJsonWithProxy(yfUrl, 8000);
+        const result = d?.chart?.result?.[0];
+        if (result) {
+            meta       = result.meta;
+            timestamps = result.timestamp || [];
+            closes     = result.indicators?.quote?.[0]?.close || [];
         }
     } catch(e) {
         container.innerHTML = '<div style="display:flex;align-items:center;justify-content:center;height:100%;color:#64748b;font-size:0.75rem;">⚠️ ไม่สามารถโหลดกราฟได้</div>';
@@ -1579,12 +1608,9 @@ async function loadAndRenderChart(symbol, period) {
 ══════════════════════════════════════════ */
 async function fetchTechnicals(symbol) {
     try {
-        const proxy = 'https://corsproxy.io/?';
         const yfUrl = `https://query2.finance.yahoo.com/v8/finance/chart/${encodeURIComponent(symbol)}?interval=1d&range=1y&includePrePost=false`;
-        const timeout = new Promise((_, rej) => setTimeout(() => rej(new Error('timeout')), 12000));
-        const r = await Promise.race([fetch(proxy + encodeURIComponent(yfUrl)), timeout]);
-        if (!r.ok) return null;
-        const d = await r.json();
+        const d = await fetchJsonWithProxy(yfUrl, 8000);
+        if (!d) return null;
         const result = d?.chart?.result?.[0];
         if (!result) return null;
 
@@ -1756,17 +1782,16 @@ async function searchStockPrice() {
         }
     }
 
-    // 2. Fallback to Yahoo Finance via corsproxy.io
+    // 2. Fallback to Yahoo Finance via multi-proxy
     if (!price) {
         try {
-            const url = `https://corsproxy.io/?${encodeURIComponent('https://query2.finance.yahoo.com/v8/finance/chart/' + symbol + '?interval=1d&range=1d')}`;
-            const r = await fetch(url);
-            if (r.ok) {
-                const d = await r.json();
+            const url = 'https://query2.finance.yahoo.com/v8/finance/chart/' + encodeURIComponent(symbol) + '?interval=1d&range=1d';
+            const d = await fetchJsonWithProxy(url, 6000);
+            if (d && d.chart && d.chart.result && d.chart.result[0]) {
                 const result = d.chart.result[0];
                 const meta = result.meta;
                 price = meta.regularMarketPrice;
-                const prevClose = meta.previousClose;
+                const prevClose = meta.previousClose || meta.chartPreviousClose;
                 if (price && prevClose) {
                     change = price - prevClose;
                     changePercent = (change / prevClose) * 100;
