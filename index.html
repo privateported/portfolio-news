@@ -366,8 +366,9 @@
             gap: 1.25rem;
             align-items: stretch;
         }
-        @media (max-width:768px) {
+        @media (max-width:860px) {
             .widget-grid { grid-template-columns: 1fr; }
+            .sector-grid { grid-template-columns: 1fr !important; }
         }
         @media (max-width:640px) {
             .grid { grid-template-columns: 1fr; padding: .75rem; }
@@ -539,6 +540,96 @@
                     <tr><td colspan="6" style="text-align: center; padding: 1.5rem; color: var(--text-muted);">⏳ กำลังดึงข้อมูลตัวแปรมหภาค Real-Time...</td></tr>
                 </tbody>
             </table>
+        </div>
+
+        <!-- Separator -->
+        <div style="border-top: 1px dashed var(--border); margin: 1.35rem 0 1rem;"></div>
+
+        <!-- ═══ SECTION 3: SECTOR HEATMAP & ROTATION RECAP ═══ -->
+        <div style="display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 0.6rem; margin-bottom: 0.75rem;">
+            <div style="display: flex; align-items: center; gap: 0.5rem;">
+                <span style="font-size: 1.2rem;">📊</span>
+                <div>
+                    <h4 style="font-size: 0.88rem; font-weight: 700; color: var(--text-primary); line-height: 1.25;">
+                        สรุปทิศทางรายกลุ่มอุตสาหกรรม & หุ้นเด่น (Sector Performance & Top Leaders)
+                    </h4>
+                    <p style="font-size: 0.68rem; color: var(--text-muted); margin-top: 2px;">
+                        เปรียบเทียบผลตอบแทนรายกลุ่ม (สหรัฐฯ vs ไทย) พร้อมตัวอย่างหุ้น Top 1-3 และทิศทางเงินทุน (Sector Rotation)
+                    </p>
+                </div>
+            </div>
+            <span id="sectorRecapTime" style="font-size: 0.65rem; color: var(--text-muted);">อัปเดต: กำลังโหลด...</span>
+        </div>
+
+        <!-- Side-by-Side Tables Grid -->
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; margin-bottom: 0.85rem;" class="sector-grid">
+            <!-- Left: US Sectors Table -->
+            <div style="border: 1px solid var(--border); border-radius: 10px; overflow: hidden; background: #ffffff;">
+                <div style="background: #f8fafc; padding: 0.55rem 0.85rem; font-weight: 700; font-size: 0.75rem; color: var(--text-primary); display: flex; align-items: center; justify-content: space-between; border-bottom: 1px solid var(--border);">
+                    <span>🇺🇸 ตลาดหุ้นสหรัฐฯ (US Sector ETFs)</span>
+                    <span id="usMarketPulseBadge" class="badge" style="background:#e2e8f0; color:var(--text-secondary); font-size:0.6rem;">กำลังคำนวณ...</span>
+                </div>
+                <div class="table-container" style="border: none; border-radius: 0;">
+                    <table class="summary-table" style="font-size: 0.72rem;">
+                        <thead>
+                            <tr>
+                                <th style="width: 32%">กลุ่มอุตสาหกรรม</th>
+                                <th style="width: 18%; text-align: right;">ETF (Live)</th>
+                                <th style="width: 50%">หุ้นเด่น Top 1-3 ในกลุ่ม</th>
+                            </tr>
+                        </thead>
+                        <tbody id="usSectorBody">
+                            <tr><td colspan="3" style="text-align:center; padding:1.2rem; color:var(--text-muted);">กำลังโหลดข้อมูลกลุ่มหุ้นสหรัฐฯ...</td></tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- Right: Thai Sectors Table -->
+            <div style="border: 1px solid var(--border); border-radius: 10px; overflow: hidden; background: #ffffff;">
+                <div style="background: #f8fafc; padding: 0.55rem 0.85rem; font-weight: 700; font-size: 0.75rem; color: var(--text-primary); display: flex; align-items: center; justify-content: space-between; border-bottom: 1px solid var(--border);">
+                    <span>🇹🇭 ตลาดหุ้นไทย (Thai Industry Sectors)</span>
+                    <span id="thMarketPulseBadge" class="badge" style="background:#e2e8f0; color:var(--text-secondary); font-size:0.6rem;">กำลังคำนวณ...</span>
+                </div>
+                <div class="table-container" style="border: none; border-radius: 0;">
+                    <table class="summary-table" style="font-size: 0.72rem;">
+                        <thead>
+                            <tr>
+                                <th style="width: 32%">กลุ่มอุตสาหกรรม</th>
+                                <th style="width: 18%; text-align: right;">สถานะกลุ่ม (Live)</th>
+                                <th style="width: 50%">หุ้นเด่น Top 1-3 ในกลุ่ม</th>
+                            </tr>
+                        </thead>
+                        <tbody id="thSectorBody">
+                            <tr><td colspan="3" style="text-align:center; padding:1.2rem; color:var(--text-muted);">กำลังโหลดข้อมูลกลุ่มหุ้นไทย...</td></tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <!-- Actionable Sector Rotation Summary Box -->
+        <div id="sectorRotationSummaryBox" style="background: linear-gradient(135deg, #f8fafc, #f1f5f9); border: 1px solid var(--border-bright); border-radius: 10px; padding: 0.75rem 1rem; font-size: 0.72rem; line-height: 1.55;">
+            <div style="display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 0.5rem; margin-bottom: 0.4rem;">
+                <div style="font-weight: 700; color: var(--text-primary); display: flex; align-items: center; gap: 0.35rem;">
+                    🎯 สรุปกลยุทธ์การหมุนเวียนเงินทุน (Sector Rotation & Money Flow Insight)
+                </div>
+                <span id="rotationSummaryTimestamp" style="font-size: 0.62rem; color: var(--text-muted);">วิเคราะห์จากราคาล่าสุด</span>
+            </div>
+            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 0.6rem;">
+                <div style="background: #ffffff; border: 1px solid rgba(5,150,105,0.2); border-radius: 6px; padding: 0.5rem 0.75rem;">
+                    <div style="font-weight: 700; color: #059669; font-size: 0.68rem; margin-bottom: 0.15rem;">🟢 กลุ่มนำตลาดวันนี้ (Top Inflow / Leaders)</div>
+                    <div id="topSectorLeadersText" style="color: var(--text-primary); font-weight: 600;">กำลังประมวลผล...</div>
+                </div>
+                <div style="background: #ffffff; border: 1px solid rgba(220,38,38,0.2); border-radius: 6px; padding: 0.5rem 0.75rem;">
+                    <div style="font-weight: 700; color: #dc2626; font-size: 0.68rem; margin-bottom: 0.15rem;">🔴 กลุ่มฉุดตลาดวันนี้ (Top Outflow / Laggards)</div>
+                    <div id="topSectorLaggardsText" style="color: var(--text-primary); font-weight: 600;">กำลังประมวลผล...</div>
+                </div>
+                <div style="background: #ffffff; border: 1px solid var(--border); border-radius: 6px; padding: 0.5rem 0.75rem;">
+                    <div style="font-weight: 700; color: var(--accent-blue); font-size: 0.68rem; margin-bottom: 0.15rem;">💡 คำแนะนำภาพรวม & การจัดพอร์ต</div>
+                    <div id="sectorStrategyInsightText" style="color: var(--text-secondary);">กำลังวิเคราะห์ทิศทางเงินทุน...</div>
+                </div>
+            </div>
         </div>
     </div>
 </section>
@@ -1050,6 +1141,7 @@ async function fetchAll(forceRefresh=false) {
     fetchMacroData();
     fetchMacroCalendar();
     fetchMacroDrivers();
+    fetchSectorRecap();
     renderSummaryTable();
     updateLastTime(new Date());
     setProgress(100);
@@ -1706,6 +1798,323 @@ async function fetchMacroDrivers() {
     } catch(e) {
         console.warn('Macro drivers live fetch failed', e);
         renderMacroDrivers(MASTER_MACRO_DRIVERS);
+    }
+/* ══════════════════════════════════════════
+   SECTOR HEATMAP & ROTATION ENGINE
+══════════════════════════════════════════ */
+const MASTER_US_SECTORS = [
+    {
+        name: '💻 Tech / AI & Semis',
+        etf: 'XLK',
+        baselinePrice: 181.74,
+        stocks: [
+            { sym: 'NVDA', name: 'Nvidia' },
+            { sym: 'AAPL', name: 'Apple' },
+            { sym: 'MSFT', name: 'Microsoft' }
+        ]
+    },
+    {
+        name: '🏦 Financials & Banks',
+        etf: 'XLF',
+        baselinePrice: 58.31,
+        stocks: [
+            { sym: 'JPM', name: 'JPMorgan' },
+            { sym: 'BAC', name: 'BofA' },
+            { sym: 'GS', name: 'Goldman' }
+        ]
+    },
+    {
+        name: '⚡ Energy & Oil',
+        etf: 'XLE',
+        baselinePrice: 62.06,
+        stocks: [
+            { sym: 'XOM', name: 'Exxon' },
+            { sym: 'CVX', name: 'Chevron' },
+            { sym: 'COP', name: 'Conoco' }
+        ]
+    },
+    {
+        name: '💊 Healthcare & Pharma',
+        etf: 'XLV',
+        baselinePrice: 175.29,
+        stocks: [
+            { sym: 'LLY', name: 'Eli Lilly' },
+            { sym: 'UNH', name: 'UnitedHealth' },
+            { sym: 'JNJ', name: 'J&J' }
+        ]
+    },
+    {
+        name: '🛒 Consumer & Retail',
+        etf: 'XLY',
+        baselinePrice: 202.15,
+        stocks: [
+            { sym: 'AMZN', name: 'Amazon' },
+            { sym: 'TSLA', name: 'Tesla' },
+            { sym: 'WMT', name: 'Walmart' }
+        ]
+    },
+    {
+        name: '🏗️ Industrials & Aero',
+        etf: 'XLI',
+        baselinePrice: 135.40,
+        stocks: [
+            { sym: 'CAT', name: 'Caterpillar' },
+            { sym: 'GE', name: 'GE Aero' },
+            { sym: 'BA', name: 'Boeing' }
+        ]
+    }
+];
+
+const MASTER_TH_SECTORS = [
+    {
+        name: '🏦 การเงิน & ธนาคาร (BANK)',
+        indexSym: 'KBANK.BK',
+        stocks: [
+            { sym: 'KBANK.BK', name: 'KBANK' },
+            { sym: 'SCB.BK', name: 'SCB' },
+            { sym: 'BBL.BK', name: 'BBL' }
+        ]
+    },
+    {
+        name: '⚡ พลังงาน & ปิโตรฯ (ENERG)',
+        indexSym: 'PTT.BK',
+        stocks: [
+            { sym: 'PTT.BK', name: 'PTT' },
+            { sym: 'PTTEP.BK', name: 'PTTEP' },
+            { sym: 'GULF.BK', name: 'GULF' }
+        ]
+    },
+    {
+        name: '🛒 พาณิชย์ & ค้าปลีก (COMM)',
+        indexSym: 'CPALL.BK',
+        stocks: [
+            { sym: 'CPALL.BK', name: 'CPALL' },
+            { sym: 'CPAXT.BK', name: 'CPAXT' },
+            { sym: 'CRC.BK', name: 'CRC' }
+        ]
+    },
+    {
+        name: '💻 ชิ้นส่วนอิเล็กฯ (ETRON)',
+        indexSym: 'DELTA.BK',
+        stocks: [
+            { sym: 'DELTA.BK', name: 'DELTA' },
+            { sym: 'HANA.BK', name: 'HANA' },
+            { sym: 'KCE.BK', name: 'KCE' }
+        ]
+    },
+    {
+        name: '💊 การแพทย์ & รพ. (HELTH)',
+        indexSym: 'BDMS.BK',
+        stocks: [
+            { sym: 'BDMS.BK', name: 'BDMS' },
+            { sym: 'BH.BK', name: 'BH' },
+            { sym: 'BCH.BK', name: 'BCH' }
+        ]
+    },
+    {
+        name: '✈️ ท่องเที่ยว & ขนส่ง (TRANS)',
+        indexSym: 'AOT.BK',
+        stocks: [
+            { sym: 'AOT.BK', name: 'AOT' },
+            { sym: 'MINT.BK', name: 'MINT' },
+            { sym: 'CENTEL.BK', name: 'CENTEL' }
+        ]
+    }
+];
+
+function renderSectorRecap(usData, thData) {
+    const usTbody = document.getElementById('usSectorBody');
+    const thTbody = document.getElementById('thSectorBody');
+
+    // 1. Render US Sectors Table
+    if (usTbody && usData) {
+        usTbody.innerHTML = usData.map(sec => {
+            const price = sec.price != null ? sec.price : sec.baselinePrice;
+            const pct = sec.changePct != null ? sec.changePct : 0;
+            const sign = pct >= 0 ? '+' : '';
+            const color = pct >= 0 ? '#059669' : '#dc2626';
+
+            const stocksHtml = sec.stocks.map(s => {
+                const sPct = s.changePct != null ? s.changePct : 0;
+                const sSign = sPct >= 0 ? '+' : '';
+                const sColor = sPct >= 0 ? '#059669' : '#dc2626';
+                const sPctText = s.changePct != null ? `<span style="color:${sColor}; font-size:0.65rem; margin-left:2px;">${sSign}${sPct.toFixed(1)}%</span>` : '';
+                return `<span style="display:inline-block; background:#f8fafc; border:1px solid var(--border); border-radius:4px; padding:0.12rem 0.35rem; margin:2px; font-size:0.68rem; font-weight:600;">${esc(s.name || s.sym)}${sPctText}</span>`;
+            }).join(' ');
+
+            return `
+            <tr>
+                <td style="padding: 0.55rem 0.75rem; font-weight: 700; color: var(--text-primary);">
+                    ${esc(sec.name)}
+                </td>
+                <td style="padding: 0.55rem 0.75rem; text-align: right; font-family: 'Inter', monospace; white-space: nowrap;">
+                    <div style="font-weight: 700; color: var(--text-primary);">$${price.toFixed(2)}</div>
+                    <div style="font-size: 0.65rem; font-weight: 600; color: ${color};">${sign}${pct.toFixed(2)}%</div>
+                </td>
+                <td style="padding: 0.55rem 0.75rem;">
+                    ${stocksHtml}
+                </td>
+            </tr>`;
+        }).join('');
+    }
+
+    // 2. Render Thai Sectors Table
+    if (thTbody && thData) {
+        thTbody.innerHTML = thData.map(sec => {
+            const pct = sec.changePct != null ? sec.changePct : 0;
+            const sign = pct >= 0 ? '+' : '';
+            const color = pct >= 0 ? '#059669' : '#dc2626';
+            const statusLabel = pct >= 0 ? `🟢 บวก (${sign}${pct.toFixed(2)}%)` : `🔴 ลบ (${sign}${pct.toFixed(2)}%)`;
+
+            const stocksHtml = sec.stocks.map(s => {
+                const sPrice = s.price != null ? `฿${s.price.toFixed(2)}` : '';
+                const sPct = s.changePct != null ? s.changePct : 0;
+                const sSign = sPct >= 0 ? '+' : '';
+                const sColor = sPct >= 0 ? '#059669' : '#dc2626';
+                const sPctText = s.changePct != null ? `<span style="color:${sColor}; font-size:0.65rem; margin-left:2px;">${sSign}${sPct.toFixed(1)}%</span>` : '';
+                return `<span style="display:inline-block; background:#f8fafc; border:1px solid var(--border); border-radius:4px; padding:0.12rem 0.35rem; margin:2px; font-size:0.68rem; font-weight:600;">${esc(s.name)}${sPctText}</span>`;
+            }).join(' ');
+
+            return `
+            <tr>
+                <td style="padding: 0.55rem 0.75rem; font-weight: 700; color: var(--text-primary);">
+                    ${esc(sec.name)}
+                </td>
+                <td style="padding: 0.55rem 0.75rem; text-align: right; font-family: 'Inter', monospace; white-space: nowrap;">
+                    <span style="font-size:0.7rem; font-weight:700; color:${color};">${statusLabel}</span>
+                </td>
+                <td style="padding: 0.55rem 0.75rem;">
+                    ${stocksHtml}
+                </td>
+            </tr>`;
+        }).join('');
+    }
+}
+
+async function fetchSectorRecap() {
+    const timeLabel = document.getElementById('sectorRecapTime');
+    const usBadge = document.getElementById('usMarketPulseBadge');
+    const thBadge = document.getElementById('thMarketPulseBadge');
+    const leadersEl = document.getElementById('topSectorLeadersText');
+    const laggardsEl = document.getElementById('topSectorLaggardsText');
+    const insightEl = document.getElementById('sectorStrategyInsightText');
+
+    // 1. Instant baseline render
+    const usData = JSON.parse(JSON.stringify(MASTER_US_SECTORS));
+    const thData = JSON.parse(JSON.stringify(MASTER_TH_SECTORS));
+    renderSectorRecap(usData, thData);
+
+    try {
+        // 2. Fetch US ETFs & top stocks live
+        const usFetches = usData.map(async sec => {
+            try {
+                const res = await fetchJsonWithProxy(`https://query2.finance.yahoo.com/v8/finance/chart/${sec.etf}?interval=1d&range=1d`, 5000);
+                if (res && res.chart && res.chart.result && res.chart.result[0]) {
+                    const meta = res.chart.result[0].meta;
+                    const price = meta.regularMarketPrice;
+                    const prev = meta.previousClose || meta.chartPreviousClose || price;
+                    sec.price = price;
+                    sec.changePct = prev ? ((price - prev) / prev) * 100 : 0;
+                }
+            } catch(e) {}
+
+            // Fetch top 3 stocks in this sector
+            await Promise.all(sec.stocks.map(async s => {
+                try {
+                    const sRes = await fetchJsonWithProxy(`https://query2.finance.yahoo.com/v8/finance/chart/${s.sym}?interval=1d&range=1d`, 5000);
+                    if (sRes && sRes.chart && sRes.chart.result && sRes.chart.result[0]) {
+                        const meta = sRes.chart.result[0].meta;
+                        const price = meta.regularMarketPrice;
+                        const prev = meta.previousClose || meta.chartPreviousClose || price;
+                        s.price = price;
+                        s.changePct = prev ? ((price - prev) / prev) * 100 : 0;
+                    }
+                } catch(e) {}
+            }));
+        });
+
+        // 3. Fetch Thai sector top stocks live
+        const thFetches = thData.map(async sec => {
+            let totalPct = 0;
+            let count = 0;
+
+            await Promise.all(sec.stocks.map(async s => {
+                try {
+                    const sRes = await fetchJsonWithProxy(`https://query2.finance.yahoo.com/v8/finance/chart/${s.sym}?interval=1d&range=1d`, 5000);
+                    if (sRes && sRes.chart && sRes.chart.result && sRes.chart.result[0]) {
+                        const meta = sRes.chart.result[0].meta;
+                        const price = meta.regularMarketPrice;
+                        const prev = meta.previousClose || meta.chartPreviousClose || price;
+                        s.price = price;
+                        s.changePct = prev ? ((price - prev) / prev) * 100 : 0;
+                        totalPct += s.changePct;
+                        count++;
+                    }
+                } catch(e) {}
+            }));
+
+            sec.changePct = count > 0 ? totalPct / count : 0;
+        });
+
+        await Promise.all([...usFetches, ...thFetches]);
+
+        // Re-render with live data
+        renderSectorRecap(usData, thData);
+
+        // 4. Calculate Sector Rotation Insights
+        const allSectors = [
+            ...usData.map(s => ({ name: s.name.split(' ')[1] || s.name, pct: s.changePct || 0, market: 'US' })),
+            ...thData.map(s => ({ name: s.name.split(' ')[0] || s.name, pct: s.changePct || 0, market: 'TH' }))
+        ].sort((a, b) => b.pct - a.pct);
+
+        const topLeaders = allSectors.filter(s => s.pct > 0).slice(0, 2);
+        const topLaggards = allSectors.filter(s => s.pct < 0).slice(-2).reverse();
+
+        if (leadersEl) {
+            leadersEl.innerHTML = topLeaders.length > 0
+                ? topLeaders.map(s => `${s.name} (+${s.pct.toFixed(2)}%)`).join(', ')
+                : 'ทุกกลุ่มทรงตัว / พักฐาน';
+        }
+
+        if (laggardsEl) {
+            laggardsEl.innerHTML = topLaggards.length > 0
+                ? topLaggards.map(s => `${s.name} (${s.pct.toFixed(2)}%)`).join(', ')
+                : 'ไม่มีกลุ่มที่ปรับลงรุนแรง';
+        }
+
+        if (insightEl) {
+            const avgUsPct = usData.reduce((acc, s) => acc + (s.changePct || 0), 0) / usData.length;
+            if (avgUsPct > 0.5) {
+                insightEl.innerHTML = '🟢 <strong>Risk-On</strong>: สภาพคล่องไหลเข้ากลุ่มเติบโต (Tech/AI) หนุนดัชนีภาพรวม';
+            } else if (avgUsPct < -0.5) {
+                insightEl.innerHTML = '🔴 <strong>Risk-Off</strong>: มีแรงเทขายลดความเสี่ยง เงินหมุนเข้าพักในกลุ่มปลอดภัย/เงินสด';
+            } else {
+                insightEl.innerHTML = '⚪ <strong>Sector Rotation</strong>: เม็ดเงินหมุนเวียนสลับกลุ่มเล่น ตลาดเคลื่อนไหวตามงบการเงิน';
+            }
+        }
+
+        // Market Pulse Badges
+        const avgUs = usData.reduce((acc, s) => acc + (s.changePct || 0), 0) / usData.length;
+        if (usBadge) {
+            usBadge.textContent = avgUs >= 0 ? '🟢 Risk-On (บวก)' : '🔴 Risk-Off (พักตัว)';
+            usBadge.style.background = avgUs >= 0 ? 'rgba(5,150,105,0.1)' : 'rgba(220,38,38,0.1)';
+            usBadge.style.color = avgUs >= 0 ? '#059669' : '#dc2626';
+        }
+
+        const avgTh = thData.reduce((acc, s) => acc + (s.changePct || 0), 0) / thData.length;
+        if (thBadge) {
+            thBadge.textContent = avgTh >= 0 ? '🟢 ตลาดบวก' : '🔴 ตลาดพักฐาน';
+            thBadge.style.background = avgTh >= 0 ? 'rgba(5,150,105,0.1)' : 'rgba(220,38,38,0.1)';
+            thBadge.style.color = avgTh >= 0 ? '#059669' : '#dc2626';
+        }
+
+        const now = new Date();
+        if (timeLabel) {
+            timeLabel.textContent = `อัปเดต: ${now.toLocaleTimeString('th-TH', { hour: '2-digit', minute: '2-digit' })} น.`;
+        }
+    } catch(e) {
+        console.warn('Sector recap live update failed', e);
+        renderSectorRecap(MASTER_US_SECTORS, MASTER_TH_SECTORS);
     }
 }
 
@@ -3051,11 +3460,13 @@ function startTickers() {
     fetchMacroData(); // initial fetch
     fetchMacroCalendar(); // initial macro calendar fetch
     fetchMacroDrivers(); // initial macro drivers fetch
+    fetchSectorRecap(); // initial sector recap fetch
     setInterval(updateCountdown, 1000); // update countdown every second
     setInterval(()=>{
         updateMarketStatus();
         fetchMacroData(); // refresh gold/forex every minute
         fetchMacroDrivers(); // refresh macro drivers every minute
+        fetchSectorRecap(); // refresh sector recap every minute
         if (!isFetching && needsRefresh(new Date().toISOString())) fetchAll(true);
     }, 60_000); // check every minute
     setInterval(fetchMacroCalendar, 300_000); // refresh macro calendar every 5 minutes
@@ -3070,6 +3481,7 @@ function startTickers() {
     renderTradingViewWidget();
     fetchMacroCalendar();
     fetchMacroDrivers();
+    fetchSectorRecap();
 
     const saved = restoreCache();
     if (saved && !needsRefresh(saved.ts)) {
