@@ -1198,7 +1198,6 @@ function analyzeSentiment(symbol) {
         return { score, text: '⚪ ทั่วไป (Neutral)', status: 'HOLD', dot: '⚪' };
     }
 }
-
 async function fetchPrices() {
     let tdKey = null;
     try {
@@ -1352,8 +1351,8 @@ const MASTER_MACRO_INDICATORS = [
         dateText: 'ศุกร์ 28 ส.ค. 19:30 น.',
         previous: '0.2%',
         forecast: '0.2%',
-        actual: null,
-        hint: 'ถ้าต่ำกว่าคาด = หนุน Fed ลดดอกเบี้ย 🟢'
+        actual: '0.2%',
+        hint: 'เงินเฟ้อตามคาด ชะลอตัวต่อเนื่อง หนุน Fed ปรับลดดอกเบี้ย 🟢'
     },
     {
         id: 'gdp_prelim',
@@ -1362,10 +1361,10 @@ const MASTER_MACRO_INDICATORS = [
         type: 'gdp',
         date: '2026-08-27 19:30',
         dateText: 'พฤหัส 27 ส.ค. 19:30 น.',
-        previous: '1.5%',
-        forecast: '1.5%',
-        actual: null,
-        hint: 'สะท้อนการเติบโตทางเศรษฐกิจ'
+        previous: '2.8%',
+        forecast: '2.8%',
+        actual: '3.0%',
+        hint: 'เศรษฐกิจสหรัฐฯ โตแกร่ง 3.0% ลดความเสี่ยง Recession (Soft Landing) 🟢'
     },
     {
         id: 'nfp',
@@ -1375,7 +1374,7 @@ const MASTER_MACRO_INDICATORS = [
         date: '2026-09-04 19:30',
         dateText: 'ศุกร์ 4 ก.ย. 19:30 น.',
         previous: '142K',
-        forecast: '165K',
+        forecast: '58K',
         actual: null,
         hint: 'ถ้าชะลอตัวพอเหมาะ = หนุน Fed ลดดอกเบี้ย 🟢'
     },
@@ -1386,8 +1385,8 @@ const MASTER_MACRO_INDICATORS = [
         type: 'unemployment',
         date: '2026-09-04 19:30',
         dateText: 'ศุกร์ 4 ก.ย. 19:30 น.',
-        previous: '4.2%',
-        forecast: '4.2%',
+        previous: '4.1%',
+        forecast: '4.1%',
         actual: null,
         hint: 'ถ้าขยับขึ้นเล็กน้อย = หนุน Fed ลดดอกเบี้ย 🟢'
     },
@@ -1458,7 +1457,17 @@ function evaluateFedImpact(item) {
             } else if (actNum > fcNum) {
                 return `<div style="color:#dc2626; font-weight:700;">🔴 เงินเฟ้อสูงกว่าคาด (${actual} vs ${forecast})</div><div style="font-size:0.65rem; color:var(--text-secondary); margin-top:2px;">→ สัญญาณระวัง: เงินเฟ้อดื้อ Fed อาจต้องคงดอกเบี้ยสูงนานขึ้น</div>`;
             } else {
-                return `<div style="color:#2563eb; font-weight:700;">⚪ ตามคาดการณ์ (${actual})</div><div style="font-size:0.65rem; color:var(--text-secondary); margin-top:2px;">→ เงินเฟ้อสอดคล้องกับแนวทาง Fed (ตลาดทรงตัว/เป็นกลาง)</div>`;
+                return `<div style="color:#059669; font-weight:700;">🟢 ตามคาดการณ์ (${actual}) ชะลอตัวต่อเนื่อง</div><div style="font-size:0.65rem; color:var(--text-secondary); margin-top:2px;">→ เงินเฟ้อสอดคล้องกับเป้าหมาย Fed หนุนการเริ่มวงจรลดดอกเบี้ย</div>`;
+            }
+        }
+    } else if (type === 'gdp') {
+        const actNum = parseFloat(actual.replace(/[^0-9.-]/g, ''));
+        const fcNum = forecast ? parseFloat(forecast.replace(/[^0-9.-]/g, '')) : actNum;
+        if (!isNaN(actNum) && !isNaN(fcNum)) {
+            if (actNum >= fcNum) {
+                return `<div style="color:#059669; font-weight:700;">🟢 ขยายตัวแข็งแกร่ง (${actual} vs ${forecast})</div><div style="font-size:0.65rem; color:var(--text-secondary); margin-top:2px;">→ เศรษฐกิจสหรัฐฯ ทรงตัวแกร่ง ลดความเสี่ยง Recession (Soft Landing)</div>`;
+            } else {
+                return `<div style="color:#dc2626; font-weight:700;">🔴 ชะลอตัวต่ำกว่าคาด (${actual} vs ${forecast})</div><div style="font-size:0.65rem; color:var(--text-secondary); margin-top:2px;">→ สัญญาณเตือนเศรษฐกิจชะลอตัว</div>`;
             }
         }
     } else if (type === 'employment') {
