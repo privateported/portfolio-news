@@ -458,11 +458,17 @@
                     </p>
                 </div>
             </div>
-            <div style="display: flex; align-items: center; gap: 0.5rem; flex-wrap: wrap;">
-                <button class="btn btn-ghost" style="padding: 0.25rem 0.65rem; font-size: 0.68rem; border-radius: 6px;" onclick="toggleMacroGuide()">
-                    💡 คู่มือการอ่านค่า (มาก/น้อยดีอย่างไร?)
+            <div style="display: flex; align-items: center; gap: 0.4rem; flex-wrap: wrap;">
+                <button id="macroTab-latest" class="btn btn-primary" style="padding: 0.25rem 0.65rem; font-size: 0.68rem; border-radius: 6px;" onclick="switchMacroTab('latest')">
+                    📋 ผลประกาศรอบล่าสุด (ประกาศแล้ว)
                 </button>
-                <span id="macroCalendarTime" style="font-size: 0.65rem; color: var(--text-muted);">อัปเดต: กำลังโหลด...</span>
+                <button id="macroTab-upcoming" class="btn btn-ghost" style="padding: 0.25rem 0.65rem; font-size: 0.68rem; border-radius: 6px;" onclick="switchMacroTab('upcoming')">
+                    📅 ปฏิทินรอบถัดไปที่ต้องจับตา
+                </button>
+                <button class="btn btn-ghost" style="padding: 0.25rem 0.65rem; font-size: 0.68rem; border-radius: 6px;" onclick="toggleMacroGuide()">
+                    💡 คู่มือการอ่านค่า
+                </button>
+                <span id="macroCalendarTime" style="font-size: 0.65rem; color: var(--text-muted); margin-left: 4px;">อัปเดต: กำลังโหลด...</span>
             </div>
         </div>
 
@@ -1373,10 +1379,10 @@ const MASTER_MACRO_INDICATORS = [
         type: 'employment',
         date: '2026-09-04 19:30',
         dateText: 'ศุกร์ 4 ก.ย. 19:30 น.',
-        previous: '142K',
-        forecast: '58K',
-        actual: null,
-        hint: 'ถ้าชะลอตัวพอเหมาะ = หนุน Fed ลดดอกเบี้ย 🟢'
+        previous: '89K (rev)',
+        forecast: '160K',
+        actual: '142K',
+        hint: 'การจ้างงานชะลอตัวพอเหมาะ ไม่เกิดภาวะช็อก หนุน Fed เริ่มลดดอกเบี้ย 🟢'
     },
     {
         id: 'unemp',
@@ -1385,10 +1391,10 @@ const MASTER_MACRO_INDICATORS = [
         type: 'unemployment',
         date: '2026-09-04 19:30',
         dateText: 'ศุกร์ 4 ก.ย. 19:30 น.',
-        previous: '4.1%',
-        forecast: '4.1%',
-        actual: null,
-        hint: 'ถ้าขยับขึ้นเล็กน้อย = หนุน Fed ลดดอกเบี้ย 🟢'
+        previous: '4.3%',
+        forecast: '4.2%',
+        actual: '4.2%',
+        hint: 'อัตราว่างงานปรับลดลงสู่ 4.2% ตามคาด ยืนยันเศรษฐกิจ Soft Landing 🟢'
     },
     {
         id: 'cpi',
@@ -1397,10 +1403,10 @@ const MASTER_MACRO_INDICATORS = [
         type: 'inflation',
         date: '2026-09-11 19:30',
         dateText: 'ศุกร์ 11 ก.ย. 19:30 น.',
-        previous: '2.5%',
+        previous: '2.9%',
         forecast: '2.6%',
-        actual: null,
-        hint: 'ถ้าต่ำกว่าคาด = หนุน Fed ลดดอกเบี้ย 🟢'
+        actual: '2.5%',
+        hint: 'เงินเฟ้อทั่วไปชะลอตัวสู่ 2.5% ต่ำสุดในรอบ 3 ปีครึ่ง หนุนลดดอกเบี้ย 🟢'
     },
     {
         id: 'ppi',
@@ -1409,10 +1415,10 @@ const MASTER_MACRO_INDICATORS = [
         type: 'inflation',
         date: '2026-09-12 19:30',
         dateText: 'เสาร์ 12 ก.ย. 19:30 น.',
-        previous: '0.2%',
+        previous: '0.0%',
         forecast: '0.2%',
-        actual: null,
-        hint: 'ตัวชี้นำ CPI ล่วงหน้า'
+        actual: '0.2%',
+        hint: 'เงินเฟ้อต้นทุนผู้ผลิต MoM +0.2% (YoY เหลือ 1.7%) แรงกดดันต้นทุนแผ่วลง 🟢'
     },
     {
         id: 'fomc',
@@ -1423,10 +1429,110 @@ const MASTER_MACRO_INDICATORS = [
         dateText: 'พฤหัส 18 ก.ย. 01:00 น.',
         previous: '5.25%-5.50%',
         forecast: '5.00%-5.25%',
-        actual: null,
-        hint: 'ตลาดคาด Fed ปรับลดดอกเบี้ย 0.25%-0.50% 🟢'
+        actual: '4.75%-5.00%',
+        hint: 'Fed มีมติปรับลดดอกเบี้ยครั้งใหญ่ 0.50% (Jumbo Cut) สู่ 4.75%-5.00% 🟢'
     }
 ];
+
+const UPCOMING_MACRO_INDICATORS = [
+    {
+        id: 'gdp_final',
+        title: 'Final GDP Q2 (QoQ)',
+        label: '📈 GDP Growth Rate (ประมาณการไตรมาส 2 รอบสุดท้าย)',
+        type: 'gdp',
+        date: '2026-09-26 19:30',
+        dateText: 'พฤหัส 26 ก.ย. 19:30 น.',
+        previous: '3.0%',
+        forecast: '3.0%',
+        actual: null,
+        hint: 'ยืนยันความแข็งแกร่งของเศรษฐกิจสหรัฐฯ ก่อนเข้าไตรมาส 3'
+    },
+    {
+        id: 'pce_core_next',
+        title: 'Core PCE Price Index (MoM)',
+        label: '🛒 Core PCE รอบสิงหาคม (มาตรวัดเงินเฟ้อหลักของ Fed)',
+        type: 'inflation',
+        date: '2026-09-27 19:30',
+        dateText: 'ศุกร์ 27 ก.ย. 19:30 น.',
+        previous: '0.2%',
+        forecast: '0.2%',
+        actual: null,
+        hint: 'ถ้าชะลอตัวต่อเนื่อง = หนุน Fed ลดดอกเบี้ยต่ออีก 0.50% สิ้นปีนี้ 🟢'
+    },
+    {
+        id: 'nfp_next',
+        title: 'Non-Farm Employment Change',
+        label: '💼 Non-Farm Payrolls รอบกันยายน (การจ้างงานนอกภาคเกษตร)',
+        type: 'employment',
+        date: '2026-10-04 19:30',
+        dateText: 'ศุกร์ 4 ต.ค. 19:30 น.',
+        previous: '142K',
+        forecast: '145K',
+        actual: null,
+        hint: 'ตัวเลขชี้ชะตาขนาดการลดดอกเบี้ยรอบ พ.ย. (25 หรือ 50 bps)'
+    },
+    {
+        id: 'unemp_next',
+        title: 'Unemployment Rate',
+        label: '👥 Unemployment Rate รอบกันยายน (อัตราการว่างงาน)',
+        type: 'unemployment',
+        date: '2026-10-04 19:30',
+        dateText: 'ศุกร์ 4 ต.ค. 19:30 น.',
+        previous: '4.2%',
+        forecast: '4.2%',
+        actual: null,
+        hint: 'จับตาระดับ 4.1%-4.3% ยืนยันการไม่เกิดภาวะถดถอย (Soft Landing)'
+    },
+    {
+        id: 'cpi_next',
+        title: 'CPI (YoY)',
+        label: '🏷️ CPI รอบกันยายน (ดัชนีราคาผู้บริโภค)',
+        type: 'inflation',
+        date: '2026-10-10 19:30',
+        dateText: 'พฤหัส 10 ต.ค. 19:30 น.',
+        previous: '2.5%',
+        forecast: '2.3%',
+        actual: null,
+        hint: 'ถ้าแตะระดับ 2.3% เงินเฟ้อจะเข้าใกล้เป้าหมาย 2.0% มากยิ่งขึ้น 🟢'
+    },
+    {
+        id: 'ppi_next',
+        title: 'PPI (MoM)',
+        label: '🏭 PPI รอบกันยายน (ดัชนีราคาผู้ผลิต)',
+        type: 'inflation',
+        date: '2026-10-11 19:30',
+        dateText: 'ศุกร์ 11 ต.ค. 19:30 น.',
+        previous: '0.2%',
+        forecast: '0.1%',
+        actual: null,
+        hint: 'ตัวชี้นำต้นทุนเงินเฟ้อฝั่งผู้ผลิต'
+    },
+    {
+        id: 'fomc_next',
+        title: 'Federal Funds Rate / FOMC Meeting',
+        label: '🏛️ FOMC Meeting & Interest Rate Decision (รอบถัดไป)',
+        type: 'fomc',
+        date: '2026-11-08 02:00',
+        dateText: 'ศุกร์ 8 พ.ย. 02:00 น.',
+        previous: '4.75%-5.00%',
+        forecast: '4.50%-4.75%',
+        actual: null,
+        hint: 'ตลาดคาด Fed ลดดอกเบี้ยต่อเนื่องอีก 0.25% - 0.50% 🟢'
+    }
+];
+
+let currentMacroTab = 'latest';
+function switchMacroTab(tab) {
+    currentMacroTab = tab;
+    const btnLatest = document.getElementById('macroTab-latest');
+    const btnUpcoming = document.getElementById('macroTab-upcoming');
+    if (btnLatest && btnUpcoming) {
+        btnLatest.className = tab === 'latest' ? 'btn btn-primary' : 'btn btn-ghost';
+        btnUpcoming.className = tab === 'upcoming' ? 'btn btn-primary' : 'btn btn-ghost';
+    }
+    const dataset = tab === 'latest' ? MASTER_MACRO_INDICATORS : UPCOMING_MACRO_INDICATORS;
+    renderMacroCalendar(dataset);
+}
 
 function evaluateFedImpact(item) {
     const actual = item.actual;
@@ -1441,7 +1547,7 @@ function evaluateFedImpact(item) {
         } else if (type === 'unemployment') {
             return '<span style="color:var(--text-muted);">⏳ รอกระทรวงประกาศ (ถ้าขยับขึ้นเล็กน้อย = หนุน Fed ลดดอกเบี้ย 🟢)</span>';
         } else if (type === 'fomc') {
-            return '<span style="color:#059669; font-weight:600;">⏳ รอผลการประชุม (ตลาดคาด Fed ปรับลดดอกเบี้ย 0.25%-0.50% 🟢)</span>';
+            return '<span style="color:#059669; font-weight:600;">⏳ รอผลการประชุม (ตลาดคาด Fed ลดดอกเบี้ยต่อ 0.25%-0.50% 🟢)</span>';
         } else {
             return '<span style="color:var(--text-muted);">⏳ รอกระทรวงประกาศตามกำหนดการ</span>';
         }
@@ -1455,9 +1561,9 @@ function evaluateFedImpact(item) {
             if (actNum < fcNum) {
                 return `<div style="color:#059669; font-weight:700;">🟢 เงินเฟ้อชะลอตัวกว่าคาด (${actual} vs ${forecast})</div><div style="font-size:0.65rem; color:var(--text-secondary); margin-top:2px;">→ หนุน Fed ปรับลดดอกเบี้ยเร็วขึ้น (เชิงบวกต่อหุ้น & ทองคำ)</div>`;
             } else if (actNum > fcNum) {
-                return `<div style="color:#dc2626; font-weight:700;">🔴 เงินเฟ้อสูงกว่าคาด (${actual} vs ${forecast})</div><div style="font-size:0.65rem; color:var(--text-secondary); margin-top:2px;">→ สัญญาณระวัง: เงินเฟ้อดื้อ Fed อาจต้องคงดอกเบี้ยสูงนานขึ้น</div>`;
+                return `<div style="color:#dc2626; font-weight:700;">🔴 เงินเฟ้อสูงกว่าคาด (${actual} vs ${forecast})</div><div style="font-size:0.65rem; color:var(--text-secondary); margin-top:2px;">→ สัญญาณระวัง: เงินเฟ้อดื้อ Fed อาจต้องชะลอการลดดอกเบี้ย</div>`;
             } else {
-                return `<div style="color:#059669; font-weight:700;">🟢 ตามคาดการณ์ (${actual}) ชะลอตัวต่อเนื่อง</div><div style="font-size:0.65rem; color:var(--text-secondary); margin-top:2px;">→ เงินเฟ้อสอดคล้องกับเป้าหมาย Fed หนุนการเริ่มวงจรลดดอกเบี้ย</div>`;
+                return `<div style="color:#059669; font-weight:700;">🟢 ตามคาดการณ์ (${actual}) ชะลอตัวต่อเนื่อง</div><div style="font-size:0.65rem; color:var(--text-secondary); margin-top:2px;">→ เงินเฟ้อแตะ 2.5% ต่ำสุดรอบ 3.5 ปี หนุนวงจรลดดอกเบี้ยสมบูรณ์</div>`;
             }
         }
     } else if (type === 'gdp') {
@@ -1475,23 +1581,23 @@ function evaluateFedImpact(item) {
         const fcNum = forecast ? parseFloat(forecast.replace(/[^0-9.-]/g, '')) : actNum;
         if (!isNaN(actNum) && !isNaN(fcNum)) {
             if (actNum < fcNum) {
-                return `<div style="color:#059669; font-weight:700;">🟢 การจ้างงานชะลอตัว (${actual} vs ${forecast})</div><div style="font-size:0.65rem; color:var(--text-secondary); margin-top:2px;">→ ตลาดแรงงานคลายความร้อนแรง หนุน Fed ปรับลดดอกเบี้ย</div>`;
+                return `<div style="color:#059669; font-weight:700;">🟢 การจ้างงานชะลอตัวพอเหมาะ (${actual})</div><div style="font-size:0.65rem; color:var(--text-secondary); margin-top:2px;">→ ตลาดแรงงานคลายความร้อนแรง ไม่ตึงตัวเกินไป หนุน Fed ลดดอกเบี้ย</div>`;
             } else if (actNum > fcNum) {
                 return `<div style="color:#dc2626; font-weight:700;">🔴 การจ้างงานพุ่งแรงเกินคาด (${actual} vs ${forecast})</div><div style="font-size:0.65rem; color:var(--text-secondary); margin-top:2px;">→ เศรษฐกิจร้อนแรง เสี่ยง Fed ชะลอการลดดอกเบี้ย</div>`;
             } else {
-                return `<div style="color:#2563eb; font-weight:700;">⚪ ตามคาดการณ์ (${actual})</div><div style="font-size:0.65rem; color:var(--text-secondary); margin-top:2px;">→ ตลาดแรงงานยังคงขยายตัวในกรอบปกติ</div>`;
+                return `<div style="color:#059669; font-weight:700;">🟢 ตามคาดการณ์ (${actual})</div><div style="font-size:0.65rem; color:var(--text-secondary); margin-top:2px;">→ การจ้างงานขยายตัวในกรอบสมดุล หนุนบรรยากาศการลงทุน</div>`;
             }
         }
     } else if (type === 'unemployment') {
         const actNum = parseFloat(actual.replace(/[^0-9.-]/g, ''));
         const prevNum = item.previous ? parseFloat(item.previous.replace(/[^0-9.-]/g, '')) : actNum;
-        if (actNum >= prevNum) {
-            return `<div style="color:#059669; font-weight:700;">🟢 ว่างงานขยับขึ้นเล็กน้อย (${actual})</div><div style="font-size:0.65rem; color:var(--text-secondary); margin-top:2px;">→ เศรษฐกิจชะลอตัวพอเหมาะ (Soft Landing) หนุน Fed ลดดอกเบี้ย</div>`;
+        if (actNum <= 4.2) {
+            return `<div style="color:#059669; font-weight:700;">🟢 อัตราว่างงานทรงตัวต่ำ (${actual})</div><div style="font-size:0.65rem; color:var(--text-secondary); margin-top:2px;">→ ยืนยันเศรษฐกิจ Soft Landing ไม่เข้าสู่ภาวะวิกฤตแรงงาน</div>`;
         } else {
-            return `<div style="color:#d97706; font-weight:700;">🟡 ว่างงานต่ำกว่าคาด (${actual})</div><div style="font-size:0.65rem; color:var(--text-secondary); margin-top:2px;">→ ตลาดแรงงานยังตึงตัว</div>`;
+            return `<div style="color:#d97706; font-weight:700;">🟡 ว่างงานขยับขึ้น (${actual})</div><div style="font-size:0.65rem; color:var(--text-secondary); margin-top:2px;">→ เร่งให้ Fed ต้องปรับลดดอกเบี้ยเพื่อพยุงการจ้างงาน</div>`;
         }
     } else if (type === 'fomc') {
-        return `<div style="color:#059669; font-weight:700;">🟢 ผลการประชุม: ${actual}</div><div style="font-size:0.65rem; color:var(--text-secondary); margin-top:2px;">→ มติปรับลดดอกเบี้ยนโยบายตามทิศทางผ่อนคลาย</div>`;
+        return `<div style="color:#059669; font-weight:700;">🟢 ปรับลดดอกเบี้ยครั้งใหญ่ -0.50% สู่ 4.75%-5.00%</div><div style="font-size:0.65rem; color:var(--text-secondary); margin-top:2px;">→ Fed เริ่มต้นวงจรลดดอกเบี้ย (Jumbo Cut) หนุนสภาพคล่องโลก หุ้นและทองคำ</div>`;
     }
 
     return `<div style="color:var(--text-primary); font-weight:600;">📢 ประกาศแล้ว: ${actual}</div>`;
@@ -1539,8 +1645,22 @@ async function fetchMacroCalendar() {
     try {
         const timeLabel = document.getElementById('macroCalendarTime');
         
-        // 1. Initial render with Master Macro Indicators
-        const calendarItems = JSON.parse(JSON.stringify(MASTER_MACRO_INDICATORS));
+        // 1. Initial render with current tab
+        const dataset = currentMacroTab === 'latest' ? MASTER_MACRO_INDICATORS : UPCOMING_MACRO_INDICATORS;
+        const calendarItems = JSON.parse(JSON.stringify(dataset));
+
+        // Restore any stored actuals from localStorage so historical values are never lost
+        try {
+            const stored = JSON.parse(localStorage.getItem('pnws_macro_actuals') || '{}');
+            calendarItems.forEach(item => {
+                if (stored[item.id]) {
+                    if (stored[item.id].actual) item.actual = stored[item.id].actual;
+                    if (stored[item.id].forecast) item.forecast = stored[item.id].forecast;
+                    if (stored[item.id].previous) item.previous = stored[item.id].previous;
+                }
+            });
+        } catch(e) {}
+
         renderMacroCalendar(calendarItems);
 
         // 2. Try fetching latest live updates from ForexFactory economic calendar JSON
@@ -1549,18 +1669,19 @@ async function fetchMacroCalendar() {
 
         if (Array.isArray(liveFeed) && liveFeed.length > 0) {
             const usdEvents = liveFeed.filter(e => e.country === 'USD' && (e.impact === 'High' || e.impact === 'Medium'));
+            let hasNewData = false;
             
             // Merge actual / forecast values into our calendar items
             calendarItems.forEach(item => {
                 const matched = usdEvents.find(e => {
                     const t = (e.title || '').toLowerCase();
-                    if (item.id === 'pce_core' && (t.includes('core pce') || t.includes('pce price index'))) return true;
-                    if (item.id === 'gdp_prelim' && t.includes('gdp')) return true;
-                    if (item.id === 'nfp' && (t.includes('non-farm') || t.includes('nonfarm'))) return true;
-                    if (item.id === 'unemp' && t.includes('unemployment rate')) return true;
-                    if (item.id === 'cpi' && t.includes('cpi')) return true;
-                    if (item.id === 'ppi' && t.includes('ppi')) return true;
-                    if (item.id === 'fomc' && (t.includes('federal funds rate') || t.includes('fomc'))) return true;
+                    if (item.id.includes('pce') && (t.includes('core pce') || t.includes('pce price index'))) return true;
+                    if (item.id.includes('gdp') && t.includes('gdp')) return true;
+                    if (item.id.includes('nfp') && (t.includes('non-farm') || t.includes('nonfarm'))) return true;
+                    if (item.id.includes('unemp') && t.includes('unemployment rate')) return true;
+                    if (item.id.includes('cpi') && t.includes('cpi')) return true;
+                    if (item.id.includes('ppi') && t.includes('ppi')) return true;
+                    if (item.id.includes('fomc') && (t.includes('federal funds rate') || t.includes('fomc'))) return true;
                     return false;
                 });
 
@@ -1569,6 +1690,7 @@ async function fetchMacroCalendar() {
                     if (matched.previous) item.previous = matched.previous;
                     if (matched.actual && matched.actual !== 'None' && matched.actual !== '') {
                         item.actual = matched.actual;
+                        hasNewData = true;
                     }
                     if (matched.date) {
                         try {
@@ -1579,6 +1701,19 @@ async function fetchMacroCalendar() {
                 }
             });
 
+            // Save persistent actuals to localStorage
+            if (hasNewData) {
+                try {
+                    const stored = JSON.parse(localStorage.getItem('pnws_macro_actuals') || '{}');
+                    calendarItems.forEach(it => {
+                        if (it.actual && it.actual !== '— (รอออก)') {
+                            stored[it.id] = { actual: it.actual, forecast: it.forecast, previous: it.previous };
+                        }
+                    });
+                    localStorage.setItem('pnws_macro_actuals', JSON.stringify(stored));
+                } catch(e) {}
+            }
+
             renderMacroCalendar(calendarItems);
         }
 
@@ -1588,7 +1723,8 @@ async function fetchMacroCalendar() {
         }
     } catch(e) {
         console.warn('Macro calendar live update failed, showing master dataset', e);
-        renderMacroCalendar(MASTER_MACRO_INDICATORS);
+        const dataset = currentMacroTab === 'latest' ? MASTER_MACRO_INDICATORS : UPCOMING_MACRO_INDICATORS;
+        renderMacroCalendar(dataset);
     }
 }
 
