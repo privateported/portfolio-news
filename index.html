@@ -689,7 +689,7 @@
                 <div style="display: flex; align-items: center; gap: 0.6rem;">
                     <span style="font-size: 1.35rem; display: flex; align-items: center; justify-content: center;">🏆</span>
                     <div>
-                        <div style="font-size: 0.75rem; font-weight: 700; color: var(--text-muted); line-height: 1.2;">ราคาทอง Spot (USD/oz)</div>
+                        <div style="font-size: 0.75rem; font-weight: 700; color: var(--text-muted); line-height: 1.2;">ราคาทอง Spot (XAU/USD)</div>
                         <div id="goldPrice" style="font-size: 1.25rem; font-weight: 800; font-family: 'Inter', monospace; color: var(--text-primary); margin-top: 2px;">กำลังโหลด...</div>
                     </div>
                 </div>
@@ -1854,12 +1854,12 @@ const MASTER_MACRO_DRIVERS = [
         }
     },
     {
-        sym: 'GC=F',
-        name: 'Gold Spot (USD/oz)',
-        label: '🥇 ราคาทองคำโลก (Gold Spot)',
+        sym: 'XAUUSD',
+        name: 'Gold Spot (XAU/USD)',
+        label: '🥇 ราคาทองคำ Spot (XAU/USD)',
         unit: '$',
         decimals: 2,
-        desc: 'สินทรัพย์ปลอดภัยสากล & ทุนสำรองธนาคารกลาง',
+        desc: 'ทองคำแท่งส่งมอบทันที (Spot Gold) ปลอดภัยสากล & ทุนสำรองธนาคารกลาง',
         analyze: (p, chg, pct) => {
             if (pct >= 0) return {
                 status: '🟢 ทองคำขาขึ้น',
@@ -1931,7 +1931,20 @@ async function fetchMacroDrivers() {
     try {
         const results = await Promise.all(MASTER_MACRO_DRIVERS.map(async d => {
             try {
-                const url = 'https://query2.finance.yahoo.com/v8/finance/chart/' + encodeURIComponent(d.sym) + '?interval=1d&range=1d';
+                if (d.sym === 'XAUUSD') {
+                    try {
+                        const bRes = await fetch('https://api.binance.com/api/v3/ticker/24hr?symbol=PAXGUSDT');
+                        if (bRes.ok) {
+                            const bJson = await bRes.json();
+                            const price = parseFloat(bJson.lastPrice);
+                            const prev = parseFloat(bJson.prevClosePrice) || price;
+                            const change = price - prev;
+                            const changePct = parseFloat(bJson.priceChangePercent) || (prev ? (change / prev) * 100 : 0);
+                            return { ...d, price, change, changePct, ok: true };
+                        }
+                    } catch(e) {}
+                }
+                const url = 'https://query2.finance.yahoo.com/v8/finance/chart/' + encodeURIComponent(d.sym === 'XAUUSD' ? 'GC=F' : d.sym) + '?interval=1d&range=1d';
                 const res = await fetchJsonWithProxy(url, 6000);
                 if (res && res.chart && res.chart.result && res.chart.result[0]) {
                     const meta = res.chart.result[0].meta;
@@ -2278,10 +2291,11 @@ async function fetchSectorRecap() {
 }
 
 async function fetchMacroData() {
-    // 1. Fetch Gold Spot (GC=F) immediately and asynchronously
-    fetchTechnicals('GC=F').then(tech => {
+    // 1. Fetch Gold Spot (XAUUSD) immediately and asynchronously
+    fetchTechnicals('XAUUSD').then(tech => {
         try {
             if (!tech) throw new Error('No data');
+            techCache['XAUUSD'] = tech;
             techCache['GC=F'] = tech;
             const price = tech.regularPrice;
             const prev = tech.prevClose;
@@ -2296,7 +2310,7 @@ async function fetchMacroData() {
                     ${sign}${change.toFixed(2)} (${sign}${pct.toFixed(2)}%)
                 </span>`;
             
-            const sentiment = analyzeSentiment('GC=F');
+            const sentiment = analyzeSentiment('XAUUSD');
             let trendColor = sentiment.status === 'ADD' ? '#059669' : sentiment.status === 'TRIM' ? '#dc2626' : 'var(--text-secondary)';
             document.getElementById('goldTrend').innerHTML = `แนวโน้มตอนนี้: <span style="color:${trendColor}; font-weight:700;">${sentiment.text} (อิงข่าว & เทคนิค)</span>`;
             
@@ -2749,16 +2763,68 @@ async function loadAndRenderChart(symbol, period) {
 ══════════════════════════════════════════ */
 async function fetchTechnicals(symbol) {
     try {
-        const yfUrl = `https://query2.finance.yahoo.com/v8/finance/chart/${encodeURIComponent(symbol)}?interval=1d&range=1y&includePrePost=false`;
-        const d = await fetchJsonWithProxy(yfUrl, 8000);
-        if (!d) return null;
-        const result = d?.chart?.result?.[0];
-        if (!result) return null;
+        let closes = [], highs = [], lows = [], regularPrice = 0, prevClose = 0;
 
-        const closes  = result.indicators.quote[0].close.filter(v => v != null);
-        const highs   = result.indicators.quote[0].high.filter(v => v != null);
-        const lows    = result.indicators.quote[0].low.filter(v => v != null);
-        if (closes.length < 20) return null;
+        // Specialized Live Spot Gold (XAUUSD) Engine via Paxos/Binance Physical Gold Feed
+        if (symbol === 'XAUUSD' || symbol === 'XAU/USD' || symbol === 'GC=F') {
+            try {
+                const kRes = await fetch('https://api.binance.com/api/v3/klines?symbol=PAXGUSDT&interval=1d&limit=250');
+                if (kRes.ok) {
+                    const klines = await kRes.json();
+                    if (Array.isArray(klines) && klines.length >= 20) {
+                        closes = klines.map(k => parseFloat(k[4]));
+                        highs  = klines.map(k => parseFloat(k[2]));
+                        lows   = klines.map(k => parseFloat(k[3]));
+
+                        const tRes = await fetch('https://api.binance.com/api/v3/ticker/24hr?symbol=PAXGUSDT');
+                        if (tRes.ok) {
+                            const tick = await tRes.json();
+                            regularPrice = parseFloat(tick.lastPrice) || closes[closes.length - 1];
+                            prevClose = parseFloat(tick.prevClosePrice) || closes[closes.length - 2];
+                        } else {
+                            regularPrice = closes[closes.length - 1];
+                            prevClose = closes[closes.length - 2];
+                        }
+                    }
+                }
+            } catch(be) {
+                console.warn('Binance spot gold fetch fallback', be);
+            }
+        }
+
+        // Standard Yahoo Finance Engine
+        if (closes.length < 20) {
+            const yfUrl = `https://query2.finance.yahoo.com/v8/finance/chart/${encodeURIComponent(symbol === 'XAUUSD' ? 'GC=F' : symbol)}?interval=1d&range=1y&includePrePost=false`;
+            const d = await fetchJsonWithProxy(yfUrl, 8000);
+            if (!d) return null;
+            const result = d?.chart?.result?.[0];
+            if (!result) return null;
+
+            closes = result.indicators.quote[0].close.filter(v => v != null);
+            highs  = result.indicators.quote[0].high.filter(v => v != null);
+            lows   = result.indicators.quote[0].low.filter(v => v != null);
+            if (closes.length < 20) return null;
+
+            const lastClose = closes[closes.length - 1];
+            regularPrice = result.meta.regularMarketPrice || lastClose;
+            prevClose = result.meta.previousClose || lastClose;
+            if (closes.length >= 2) {
+                const timestamps = result.timestamp || [];
+                if (timestamps.length > 0) {
+                    const lastTs = timestamps[timestamps.length - 1] * 1000;
+                    const lastDate = new Date(lastTs).toDateString();
+                    const todayDate = new Date().toDateString();
+                    
+                    if (lastDate === todayDate) {
+                        prevClose = closes[closes.length - 2];
+                    } else {
+                        prevClose = closes[closes.length - 1];
+                    }
+                } else {
+                    prevClose = closes[closes.length - 2];
+                }
+            }
+        }
 
         /* ── Moving Averages ── */
         const ma = (arr, n) => {
@@ -2840,25 +2906,6 @@ async function fetchTechnicals(symbol) {
         if (ma200 && lastClose > ma200) techScore++;
         if (ma20 && ma50 && ma20 > ma50) techScore++;  // Golden cross region
         if (ma20 && ma50 && ma20 < ma50) techScore--;  // Death cross region
-
-        const regularPrice = result.meta.regularMarketPrice || lastClose;
-        let prevClose = result.meta.previousClose || lastClose;
-        if (closes.length >= 2) {
-            const timestamps = result.timestamp || [];
-            if (timestamps.length > 0) {
-                const lastTs = timestamps[timestamps.length - 1] * 1000;
-                const lastDate = new Date(lastTs).toDateString();
-                const todayDate = new Date().toDateString();
-                
-                if (lastDate === todayDate) {
-                    prevClose = closes[closes.length - 2];
-                } else {
-                    prevClose = closes[closes.length - 1];
-                }
-            } else {
-                prevClose = closes[closes.length - 2];
-            }
-        }
 
         return { rsi, ma20, ma50, ma100, ma200, lastClose, support30, resist30, support90, resist90, techScore, macd, regularPrice, prevClose };
     } catch(e) {
