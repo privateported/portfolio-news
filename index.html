@@ -1531,7 +1531,18 @@ function switchMacroTab(tab) {
         btnUpcoming.className = tab === 'upcoming' ? 'btn btn-primary' : 'btn btn-ghost';
     }
     const dataset = tab === 'latest' ? MASTER_MACRO_INDICATORS : UPCOMING_MACRO_INDICATORS;
-    renderMacroCalendar(dataset);
+    const items = JSON.parse(JSON.stringify(dataset));
+    try {
+        const stored = JSON.parse(localStorage.getItem('pnws_macro_actuals') || '{}');
+        items.forEach(item => {
+            if (stored[item.id]) {
+                if (stored[item.id].actual) item.actual = stored[item.id].actual;
+                if (stored[item.id].forecast) item.forecast = stored[item.id].forecast;
+                if (stored[item.id].previous) item.previous = stored[item.id].previous;
+            }
+        });
+    } catch(e) {}
+    renderMacroCalendar(items);
 }
 
 function evaluateFedImpact(item) {
