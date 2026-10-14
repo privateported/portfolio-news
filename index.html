@@ -1527,6 +1527,55 @@ let currentMacroTab = 'latest';
 // Live state storage key for persisting economic indicators across sessions
 const MACRO_STORAGE_KEY = 'pnws_macro_live_state_v3';
 
+function rollUpcomingIndicator(item) {
+    if (!item.date) return;
+    const itemDate = new Date(item.date.replace(' ', 'T'));
+    const now = new Date();
+    
+    // Only roll over if the scheduled event has passed by at least 24 hours
+    if (now.getTime() - itemDate.getTime() > 86400000) {
+        let nextYear = now.getFullYear();
+        let nextMonth = now.getMonth();
+        
+        if (now.getDate() > 15) {
+            nextMonth += 1;
+            if (nextMonth > 11) { nextMonth = 0; nextYear += 1; }
+        }
+
+        const thMonths = ['ม.ค.', 'ก.พ.', 'มี.ค.', 'เม.ย.', 'พ.ค.', 'มิ.ย.', 'ก.ค.', 'ส.ค.', 'ก.ย.', 'ต.ค.', 'พ.ย.', 'ธ.ค.'];
+
+        if (item.id.includes('nfp') || item.id.includes('unemp')) {
+            const d1 = new Date(nextYear, nextMonth, 1);
+            const offset = (5 - d1.getDay() + 7) % 7;
+            const friDate = 1 + offset;
+            item.date = `${nextYear}-${String(nextMonth+1).padStart(2,'0')}-${String(friDate).padStart(2,'0')} 19:30`;
+            item.dateText = `ศุกร์ ${friDate} ${thMonths[nextMonth]} 19:30 น.`;
+            item.actual = null;
+        } else if (item.id.includes('cpi')) {
+            const d1 = new Date(nextYear, nextMonth, 1);
+            const offset = (3 - d1.getDay() + 7) % 7;
+            const wedDate = 1 + offset + 7;
+            item.date = `${nextYear}-${String(nextMonth+1).padStart(2,'0')}-${String(wedDate).padStart(2,'0')} 20:30`;
+            item.dateText = `พุธ ${wedDate} ${thMonths[nextMonth]} 20:30 น.`;
+            item.actual = null;
+        } else if (item.id.includes('ppi')) {
+            const d1 = new Date(nextYear, nextMonth, 1);
+            const offset = (3 - d1.getDay() + 7) % 7;
+            const thuDate = 1 + offset + 8;
+            item.date = `${nextYear}-${String(nextMonth+1).padStart(2,'0')}-${String(thuDate).padStart(2,'0')} 20:30`;
+            item.dateText = `พฤหัส ${thuDate} ${thMonths[nextMonth]} 20:30 น.`;
+            item.actual = null;
+        } else if (item.id.includes('pce')) {
+            const lastDay = new Date(nextYear, nextMonth + 1, 0);
+            const offset = (lastDay.getDay() - 5 + 7) % 7;
+            const friDate = lastDay.getDate() - offset;
+            item.date = `${nextYear}-${String(nextMonth+1).padStart(2,'0')}-${String(friDate).padStart(2,'0')} 19:30`;
+            item.dateText = `ศุกร์ ${friDate} ${thMonths[nextMonth]} 19:30 น.`;
+            item.actual = null;
+        }
+    }
+}
+
 function getActiveMacroData() {
     let latest = JSON.parse(JSON.stringify(MASTER_MACRO_INDICATORS));
     let upcoming = JSON.parse(JSON.stringify(UPCOMING_MACRO_INDICATORS));
@@ -1556,6 +1605,9 @@ function getActiveMacroData() {
             });
         }
     } catch (e) {}
+
+    // Ensure upcoming items are always rolling forward into the future
+    upcoming.forEach(item => rollUpcomingIndicator(item));
 
     return { latest, upcoming };
 }
