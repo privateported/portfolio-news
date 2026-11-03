@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="th">
 <head>
     <meta charset="UTF-8">
@@ -469,6 +469,7 @@
                     💡 คู่มือการอ่านค่า
                 </button>
                 <span id="macroCalendarTime" style="font-size: 0.65rem; color: var(--text-muted); margin-left: 4px;">อัปเดต: กำลังโหลด...</span>
+                <button class="btn btn-ghost" style="padding: 0.15rem 0.45rem; font-size: 0.65rem; border-radius: 4px; margin-left: 4px;" onclick="fetchMacroCalendar()" title="ดึงข้อมูลตัวเลขเศรษฐกิจสดทันที">🔄 รีเฟรชสด</button>
             </div>
         </div>
 
@@ -938,6 +939,7 @@ let isWidgetVisible = true;
    Tries fast, reliable CORS proxies in order
 ══════════════════════════════════════════ */
 const CORS_PROXIES = [
+    url => `https://corsproxy.io/?url=${encodeURIComponent(url)}`,
     url => `https://cors.isteed.cc/${url}`,
     url => `https://proxy.cors.sh/${url}`,
     url => `https://cors-anywhere.fly.dev/${url}`,
@@ -1350,52 +1352,52 @@ function toggleMacroGuide() {
 
 const MASTER_MACRO_INDICATORS = [
     {
-        id: 'pce_core',
-        title: 'Core PCE Price Index (MoM)',
-        label: '🛒 Core PCE (มาตรวัดเงินเฟ้อหลักเบอร์ 1 ของ Fed)',
-        type: 'inflation',
-        date: '2026-09-27 19:30',
-        dateText: 'ศุกร์ 27 ก.ย. 19:30 น.',
-        previous: '0.2%',
-        forecast: '0.2%',
-        actual: '0.1%',
-        hint: 'เงินเฟ้อชะลอตัวสู่ 0.1% MoM ต่ำกว่าคาด (YoY 2.7%) หนุน Fed ปรับลดดอกเบี้ยต่อเนื่อง 🟢'
-    },
-    {
-        id: 'gdp_final',
-        title: 'Final GDP Q2 (QoQ)',
-        label: '📈 GDP Growth Rate (ประมาณการไตรมาส 2 รอบสุดท้าย)',
-        type: 'gdp',
-        date: '2026-09-26 19:30',
-        dateText: 'พฤหัส 26 ก.ย. 19:30 น.',
-        previous: '3.0%',
-        forecast: '3.0%',
-        actual: '3.0%',
-        hint: 'เศรษฐกิจสหรัฐฯ โตแกร่ง 3.0% ตามคาด ยืนยัน Soft Landing ปลอดภัยจาก Recession 🟢'
-    },
-    {
         id: 'nfp',
         title: 'Non-Farm Employment Change',
-        label: '💼 Non-Farm Payrolls (การจ้างงานนอกภาคเกษตร)',
+        label: '💼 Non-Farm Payrolls (รอบ ต.ค. ล่าสุด)',
         type: 'employment',
-        date: '2026-10-04 19:30',
-        dateText: 'ศุกร์ 4 ต.ค. 19:30 น.',
-        previous: '159K (rev)',
-        forecast: '145K',
-        actual: '254K',
-        hint: 'การจ้างงานพุ่งแรง 254K เกินคาดมาก ตลาดแรงงานแกร่ง สหรัฐฯ ไร้สัญญาณถดถอย 🟢'
+        date: '2026-11-01 20:30',
+        dateText: 'ศุกร์ 1 พ.ย. 20:30 น.',
+        previous: '223K (rev)',
+        forecast: '106K',
+        actual: '12K',
+        hint: 'การจ้างงานชะลอตัวหนักเหลือเพียง 12K (ผลกระทบพายุเฮอริเคน & สไตรค์ Boeing) หนุน Fed ลดดอกเบี้ยต่อเนื่อง 🟢'
     },
     {
         id: 'unemp',
         title: 'Unemployment Rate',
-        label: '👥 Unemployment Rate (อัตราการว่างงาน)',
+        label: '👥 Unemployment Rate (รอบ ต.ค. ล่าสุด)',
         type: 'unemployment',
-        date: '2026-10-04 19:30',
-        dateText: 'ศุกร์ 4 ต.ค. 19:30 น.',
-        previous: '4.2%',
-        forecast: '4.2%',
+        date: '2026-11-01 20:30',
+        dateText: 'ศุกร์ 1 พ.ย. 20:30 น.',
+        previous: '4.1%',
+        forecast: '4.1%',
         actual: '4.1%',
-        hint: 'อัตราว่างงานลดลงสู่ 4.1% ต่ำกว่าคาด ยืนยันเศรษฐกิจ Soft Landing แข็งแกร่ง 🟢'
+        hint: 'อัตราว่างงานทรงตัวต่ำ 4.1% ตามคาด ยืนยันภาพรวมเศรษฐกิจ Soft Landing ไร้ภาวะวิกฤต 🟢'
+    },
+    {
+        id: 'pce_core',
+        title: 'Core PCE Price Index (MoM)',
+        label: '🛒 Core PCE (รอบ ก.ย. ล่าสุด - มาตรวัดหลัก Fed)',
+        type: 'inflation',
+        date: '2026-10-31 19:30',
+        dateText: 'พฤหัส 31 ต.ค. 19:30 น.',
+        previous: '0.2%',
+        forecast: '0.3%',
+        actual: '0.3%',
+        hint: 'Core PCE MoM +0.3% ตามคาด (YoY 2.7%, Headline 2.1% เข้าใกล้เป้าหมาย 2.0%) หนุนวัฏจักรลดดอกเบี้ย 🟢'
+    },
+    {
+        id: 'gdp_q3',
+        title: 'Advance GDP Q3 (QoQ)',
+        label: '📈 Advance GDP Q3 (ประมาณการไตรมาส 3 รอบแรก)',
+        type: 'gdp',
+        date: '2026-10-30 19:30',
+        dateText: 'พุธ 30 ต.ค. 19:30 น.',
+        previous: '3.0%',
+        forecast: '3.0%',
+        actual: '2.8%',
+        hint: 'เศรษฐกิจสหรัฐฯ Q3 โตแกร่ง 2.8% การบริโภคภาคเอกชนแข็งแกร่ง ปลอดภัยจาก Recession 🟢'
     },
     {
         id: 'cpi',
@@ -1437,64 +1439,16 @@ const MASTER_MACRO_INDICATORS = [
 
 const UPCOMING_MACRO_INDICATORS = [
     {
-        id: 'gdp_q3_adv',
-        title: 'Advance GDP Q3 (QoQ)',
-        label: '📈 Advance GDP Q3 (ประมาณการไตรมาส 3 รอบแรก)',
-        type: 'gdp',
-        date: '2026-10-30 19:30',
-        dateText: 'พุธ 30 ต.ค. 19:30 น.',
-        previous: '3.0%',
-        forecast: '3.0%',
-        actual: null,
-        hint: 'ประมาณการ GDP ไตรมาส 3 รอบแรก วัดความร้อนแรงของเศรษฐกิจสหรัฐฯ'
-    },
-    {
-        id: 'pce_core_next',
-        title: 'Core PCE Price Index (MoM)',
-        label: '🛒 Core PCE รอบกันยายน (มาตรวัดเงินเฟ้อหลักของ Fed)',
-        type: 'inflation',
-        date: '2026-10-31 19:30',
-        dateText: 'พฤหัส 31 ต.ค. 19:30 น.',
-        previous: '0.1%',
-        forecast: '0.2%',
-        actual: null,
-        hint: 'มาตรวัดเงินเฟ้อตัวสำคัญ ชี้ชะตาการตัดสินใจลดดอกเบี้ยของ Fed ต้นเดือน พ.ย.'
-    },
-    {
-        id: 'nfp_next',
-        title: 'Non-Farm Employment Change',
-        label: '💼 Non-Farm Payrolls รอบตุลาคม (การจ้างงานนอกภาคเกษตร)',
-        type: 'employment',
-        date: '2026-11-01 19:30',
-        dateText: 'ศุกร์ 1 พ.ย. 19:30 น.',
-        previous: '254K',
-        forecast: '140K',
-        actual: null,
-        hint: 'จับตาผลกระทบพายุเฮอริเคนและการนัดหยุดงาน ตลาดแรงงานยังคงเสถียรภาพหรือไม่'
-    },
-    {
-        id: 'unemp_next',
-        title: 'Unemployment Rate',
-        label: '👥 Unemployment Rate รอบตุลาคม (อัตราการว่างงาน)',
-        type: 'unemployment',
-        date: '2026-11-01 19:30',
-        dateText: 'ศุกร์ 1 พ.ย. 19:30 น.',
-        previous: '4.1%',
-        forecast: '4.1%',
-        actual: null,
-        hint: 'จับตาระดับ 4.1%-4.2% ยืนยันการไม่เกิดภาวะถดถอย (Soft Landing ต่อเนื่อง)'
-    },
-    {
         id: 'fomc_next',
         title: 'Federal Funds Rate / FOMC Meeting',
-        label: '🏛️ FOMC Meeting & Interest Rate Decision (รอบถัดไป)',
+        label: '🏛️ FOMC Meeting & ดอกเบี้ยนโยบาย Fed (รอบ พ.ย.)',
         type: 'fomc',
         date: '2026-11-08 02:00',
         dateText: 'ศุกร์ 8 พ.ย. 02:00 น.',
         previous: '4.75%-5.00%',
         forecast: '4.50%-4.75%',
         actual: null,
-        hint: 'ตลาดคาด Fed ลดดอกเบี้ยต่อเนื่องอีก 0.25% สู่ระดับ 4.50%-4.75% 🟢'
+        hint: 'ตลาดให้น้ำหนักกว่า 98% คาด Fed ปรับลดดอกเบี้ยต่อเนื่องอีก 0.25% สู่ระดับ 4.50%-4.75% 🟢'
     },
     {
         id: 'cpi_next',
@@ -1504,77 +1458,76 @@ const UPCOMING_MACRO_INDICATORS = [
         date: '2026-11-13 20:30',
         dateText: 'พุธ 13 พ.ย. 20:30 น.',
         previous: '2.4%',
-        forecast: '2.4%',
+        forecast: '2.6%',
         actual: null,
-        hint: 'ตรวจจับทิศทางเงินเฟ้อหลัง Fed เริ่มปรับลดดอกเบี้ย'
+        hint: 'ติดตามทิศทางเงินเฟ้อว่าจะยังคงชะลอตัวลงตามเป้าหมายของ Fed หรือไม่'
     },
     {
         id: 'ppi_next',
         title: 'PPI (MoM)',
-        label: '🏭 PPI รอบตุลาคม (ดัชนีราคาผู้ผลิต)',
+        label: '🏭 PPI รอบตุลาคม (ดัชนีราคาผู้ผลิต - เงินเฟ้อโรงงาน)',
         type: 'inflation',
         date: '2026-11-14 20:30',
         dateText: 'พฤหัส 14 พ.ย. 20:30 น.',
         previous: '0.0%',
         forecast: '0.2%',
         actual: null,
-        hint: 'ตัวชี้นำต้นทุนเงินเฟ้อฝั่งผู้ผลิตก่อนส่งผ่านสู่ผู้บริโภค'
+        hint: 'ดัชนีชี้นำต้นทุนการผลิตก่อนส่งผ่านสู่เงินเฟ้อผู้บริโภค'
+    },
+    {
+        id: 'gdp_q3_prelim',
+        title: 'Prelim GDP Q3 (QoQ)',
+        label: '📈 Prelim GDP Q3 (ประมาณการไตรมาส 3 รอบสอง)',
+        type: 'gdp',
+        date: '2026-11-27 20:30',
+        dateText: 'พุธ 27 พ.ย. 20:30 น.',
+        previous: '2.8%',
+        forecast: '2.8%',
+        actual: null,
+        hint: 'ยืนยันอัตราการเติบโตทางเศรษฐกิจของสหรัฐฯ ในไตรมาส 3'
+    },
+    {
+        id: 'pce_core_next',
+        title: 'Core PCE Price Index (MoM)',
+        label: '🛒 Core PCE รอบตุลาคม (มาตรวัดเงินเฟ้อหลักของ Fed)',
+        type: 'inflation',
+        date: '2026-11-27 20:30',
+        dateText: 'พุธ 27 พ.ย. 20:30 น.',
+        previous: '0.3%',
+        forecast: '0.3%',
+        actual: null,
+        hint: 'ตัวเลขเงินเฟ้อสำคัญที่สุดก่อนการประชุม FOMC เดือน ธ.ค.'
+    },
+    {
+        id: 'nfp_next',
+        title: 'Non-Farm Employment Change',
+        label: '💼 Non-Farm Payrolls รอบพฤศจิกายน (การจ้างงานนอกภาคเกษตร)',
+        type: 'employment',
+        date: '2026-12-04 20:30',
+        dateText: 'ศุกร์ 4 ธ.ค. 20:30 น.',
+        previous: '12K',
+        forecast: '180K',
+        actual: null,
+        hint: 'ตรวจสอบการฟื้นตัวของการจ้างงานหลังวิกฤตพายุและสไตรค์คลี่คลาย'
+    },
+    {
+        id: 'unemp_next',
+        title: 'Unemployment Rate',
+        label: '👥 Unemployment Rate รอบพฤศจิกายน (อัตราการว่างงาน)',
+        type: 'unemployment',
+        date: '2026-12-04 20:30',
+        dateText: 'ศุกร์ 4 ธ.ค. 20:30 น.',
+        previous: '4.1%',
+        forecast: '4.1%',
+        actual: null,
+        hint: 'ตรวจสอบระดับการว่างงานต่อเนื่อง ยืนยันเสถียรภาพตลาดแรงงาน'
     }
 ];
 
 let currentMacroTab = 'latest';
 
 // Live state storage key for persisting economic indicators across sessions
-const MACRO_STORAGE_KEY = 'pnws_macro_live_state_v3';
-
-function rollUpcomingIndicator(item) {
-    if (!item.date) return;
-    const itemDate = new Date(item.date.replace(' ', 'T'));
-    const now = new Date();
-    
-    // Only roll over if the scheduled event has passed by at least 24 hours
-    if (now.getTime() - itemDate.getTime() > 86400000) {
-        let nextYear = now.getFullYear();
-        let nextMonth = now.getMonth();
-        
-        if (now.getDate() > 15) {
-            nextMonth += 1;
-            if (nextMonth > 11) { nextMonth = 0; nextYear += 1; }
-        }
-
-        const thMonths = ['ม.ค.', 'ก.พ.', 'มี.ค.', 'เม.ย.', 'พ.ค.', 'มิ.ย.', 'ก.ค.', 'ส.ค.', 'ก.ย.', 'ต.ค.', 'พ.ย.', 'ธ.ค.'];
-
-        if (item.id.includes('nfp') || item.id.includes('unemp')) {
-            const d1 = new Date(nextYear, nextMonth, 1);
-            const offset = (5 - d1.getDay() + 7) % 7;
-            const friDate = 1 + offset;
-            item.date = `${nextYear}-${String(nextMonth+1).padStart(2,'0')}-${String(friDate).padStart(2,'0')} 19:30`;
-            item.dateText = `ศุกร์ ${friDate} ${thMonths[nextMonth]} 19:30 น.`;
-            item.actual = null;
-        } else if (item.id.includes('cpi')) {
-            const d1 = new Date(nextYear, nextMonth, 1);
-            const offset = (3 - d1.getDay() + 7) % 7;
-            const wedDate = 1 + offset + 7;
-            item.date = `${nextYear}-${String(nextMonth+1).padStart(2,'0')}-${String(wedDate).padStart(2,'0')} 20:30`;
-            item.dateText = `พุธ ${wedDate} ${thMonths[nextMonth]} 20:30 น.`;
-            item.actual = null;
-        } else if (item.id.includes('ppi')) {
-            const d1 = new Date(nextYear, nextMonth, 1);
-            const offset = (3 - d1.getDay() + 7) % 7;
-            const thuDate = 1 + offset + 8;
-            item.date = `${nextYear}-${String(nextMonth+1).padStart(2,'0')}-${String(thuDate).padStart(2,'0')} 20:30`;
-            item.dateText = `พฤหัส ${thuDate} ${thMonths[nextMonth]} 20:30 น.`;
-            item.actual = null;
-        } else if (item.id.includes('pce')) {
-            const lastDay = new Date(nextYear, nextMonth + 1, 0);
-            const offset = (lastDay.getDay() - 5 + 7) % 7;
-            const friDate = lastDay.getDate() - offset;
-            item.date = `${nextYear}-${String(nextMonth+1).padStart(2,'0')}-${String(friDate).padStart(2,'0')} 19:30`;
-            item.dateText = `ศุกร์ ${friDate} ${thMonths[nextMonth]} 19:30 น.`;
-            item.actual = null;
-        }
-    }
-}
+const MACRO_STORAGE_KEY = 'pnws_macro_live_state_v5';
 
 function getActiveMacroData() {
     let latest = JSON.parse(JSON.stringify(MASTER_MACRO_INDICATORS));
@@ -1584,8 +1537,8 @@ function getActiveMacroData() {
         const stored = JSON.parse(localStorage.getItem(MACRO_STORAGE_KEY) || '{}');
         if (stored.latest && Array.isArray(stored.latest)) {
             stored.latest.forEach(stItem => {
-                const target = latest.find(it => it.id === stItem.id || (stItem.key && it.id.includes(stItem.key)));
-                if (target && stItem.actual) {
+                const target = latest.find(it => it.id === stItem.id);
+                if (target && stItem.actual && stItem.actual !== '— (รอออก)') {
                     target.actual = stItem.actual;
                     if (stItem.forecast) target.forecast = stItem.forecast;
                     if (stItem.previous) target.previous = stItem.previous;
@@ -1595,7 +1548,7 @@ function getActiveMacroData() {
         }
         if (stored.upcoming && Array.isArray(stored.upcoming)) {
             stored.upcoming.forEach(stItem => {
-                const target = upcoming.find(it => it.id === stItem.id || (stItem.key && it.id.includes(stItem.key)));
+                const target = upcoming.find(it => it.id === stItem.id);
                 if (target) {
                     if (stItem.forecast) target.forecast = stItem.forecast;
                     if (stItem.previous) target.previous = stItem.previous;
@@ -1605,9 +1558,6 @@ function getActiveMacroData() {
             });
         }
     } catch (e) {}
-
-    // Ensure upcoming items are always rolling forward into the future
-    upcoming.forEach(item => rollUpcomingIndicator(item));
 
     return { latest, upcoming };
 }
@@ -1637,7 +1587,7 @@ function evaluateFedImpact(item) {
         } else if (type === 'unemployment') {
             return '<span style="color:var(--text-muted);">⏳ รอกระทรวงประกาศ (ถ้าขยับขึ้นเล็กน้อย = หนุน Fed ลดดอกเบี้ย 🟢)</span>';
         } else if (type === 'fomc') {
-            return '<span style="color:#059669; font-weight:600;">⏳ รอผลการประชุม (ตลาดคาด Fed ลดดอกเบี้ยต่อ 0.25%-0.50% 🟢)</span>';
+            return '<span style="color:#059669; font-weight:600;">⏳ รอผลการประชุม (ตลาดคาด Fed ลดดอกเบี้ยต่อ 0.25% 🟢)</span>';
         } else {
             return '<span style="color:var(--text-muted);">⏳ รอกระทรวงประกาศตามกำหนดการ</span>';
         }
@@ -1660,7 +1610,7 @@ function evaluateFedImpact(item) {
         const actNum = parseFloat(actual.replace(/[^0-9.-]/g, ''));
         const fcNum = forecast ? parseFloat(forecast.replace(/[^0-9.-]/g, '')) : actNum;
         if (!isNaN(actNum) && !isNaN(fcNum)) {
-            if (actNum >= fcNum) {
+            if (actNum >= 2.5) {
                 return `<div style="color:#059669; font-weight:700;">🟢 ขยายตัวแข็งแกร่ง (${actual} vs ${forecast})</div><div style="font-size:0.65rem; color:var(--text-secondary); margin-top:2px;">→ เศรษฐกิจสหรัฐฯ โตแกร่ง ยืนยัน Soft Landing ไร้ความเสี่ยง Recession</div>`;
             } else {
                 return `<div style="color:#dc2626; font-weight:700;">🔴 ชะลอตัวต่ำกว่าคาด (${actual} vs ${forecast})</div><div style="font-size:0.65rem; color:var(--text-secondary); margin-top:2px;">→ สัญญาณเตือนเศรษฐกิจชะลอตัว</div>`;
@@ -1669,19 +1619,19 @@ function evaluateFedImpact(item) {
     } else if (type === 'employment') {
         const actNum = parseFloat(actual.replace(/[^0-9.-]/g, ''));
         const fcNum = forecast ? parseFloat(forecast.replace(/[^0-9.-]/g, '')) : actNum;
-        if (!isNaN(actNum) && !isNaN(fcNum)) {
-            if (actNum >= 200) {
-                return `<div style="color:#059669; font-weight:700;">🟢 การจ้างงานพุ่งแรงเกินคาด (${actual} vs ${forecast})</div><div style="font-size:0.65rem; color:var(--text-secondary); margin-top:2px;">→ ตลาดแรงงานแข็งแกร่งมาก ลดความกังวลเศรษฐกิจถดถอย หนุนตลาดหุ้น</div>`;
-            } else if (actNum >= 130) {
-                return `<div style="color:#059669; font-weight:700;">🟢 การจ้างงานขยายตัวสมดุล (${actual})</div><div style="font-size:0.65rem; color:var(--text-secondary); margin-top:2px;">→ ตลาดแรงงานคลายความร้อนแรงพอดี ไม่ตึงตัวเกินไป หนุน Fed ลดดอกเบี้ย</div>`;
+        if (!isNaN(actNum)) {
+            if (actNum <= 50) {
+                return `<div style="color:#059669; font-weight:700;">🟢 จ้างงานชะลอตัวหนัก (${actual} vs คาด ${forecast})</div><div style="font-size:0.65rem; color:var(--text-secondary); margin-top:2px;">→ ผลกระทบพายุ & สไตรค์ หนุน Fed ลดดอกเบี้ยต่อเนื่องเพื่อพยุงเศรษฐกิจ</div>`;
+            } else if (actNum >= 200) {
+                return `<div style="color:#059669; font-weight:700;">🟢 การจ้างงานพุ่งแรงเกินคาด (${actual})</div><div style="font-size:0.65rem; color:var(--text-secondary); margin-top:2px;">→ ตลาดแรงงานแข็งแกร่งมาก ลดความกังวลเศรษฐกิจถดถอย</div>`;
             } else {
-                return `<div style="color:#d97706; font-weight:700;">🟡 การจ้างงานชะลอตัว (${actual} vs ${forecast})</div><div style="font-size:0.65rem; color:var(--text-secondary); margin-top:2px;">→ ตลาดแรงงานชะลอตัว เร่งให้ Fed ต้องลดดอกเบี้ยพยุงเศรษฐกิจ</div>`;
+                return `<div style="color:#059669; font-weight:700;">🟢 ขยายตัวในกรอบสมดุล (${actual})</div><div style="font-size:0.65rem; color:var(--text-secondary); margin-top:2px;">→ ตลาดแรงงานคลายความร้อนแรง หนุน Fed ทยอยลดดอกเบี้ย</div>`;
             }
         }
     } else if (type === 'unemployment') {
         const actNum = parseFloat(actual.replace(/[^0-9.-]/g, ''));
         if (actNum <= 4.1) {
-            return `<div style="color:#059669; font-weight:700;">🟢 ว่างงานลดลงสู่ระดับต่ำ (${actual})</div><div style="font-size:0.65rem; color:var(--text-secondary); margin-top:2px;">→ ยืนยันเศรษฐกิจ Soft Landing ไร้ภาวะวิกฤตการจ้างงาน</div>`;
+            return `<div style="color:#059669; font-weight:700;">🟢 ว่างงานทรงตัวต่ำ (${actual})</div><div style="font-size:0.65rem; color:var(--text-secondary); margin-top:2px;">→ ยืนยันเศรษฐกิจ Soft Landing ไร้ภาวะวิกฤตแรงงาน</div>`;
         } else if (actNum <= 4.3) {
             return `<div style="color:#059669; font-weight:700;">🟢 ว่างงานทรงตัวในกรอบสมดุล (${actual})</div><div style="font-size:0.65rem; color:var(--text-secondary); margin-top:2px;">→ แรงงานไม่ตึงตัวเกินไป หนุน Fed ทยอยผ่อนคลายนโยบาย</div>`;
         } else {
@@ -1740,20 +1690,55 @@ async function fetchMacroCalendar() {
 
         // Fetch live economic events from ForexFactory
         const ffUrl = 'https://nfs.faireconomy.media/ff_calendar_thisweek.json';
-        const liveFeed = await fetchJsonWithProxy(ffUrl, 5000);
+        const liveFeed = await fetchJsonWithProxy(ffUrl, 6000);
 
         if (Array.isArray(liveFeed) && liveFeed.length > 0) {
             const usdEvents = liveFeed.filter(e => e.country === 'USD' && (e.impact === 'High' || e.impact === 'Medium'));
             let stateChanged = false;
 
             const categories = [
-                { key: 'pce', match: t => t.includes('core pce') || t.includes('pce price index'), latestId: 'pce_core', upcomingId: 'pce_core_next' },
-                { key: 'gdp', match: t => t.includes('gdp'), latestId: 'gdp_final', upcomingId: 'gdp_q3_adv' },
-                { key: 'nfp', match: t => t.includes('non-farm') || t.includes('nonfarm'), latestId: 'nfp', upcomingId: 'nfp_next' },
-                { key: 'unemp', match: t => t.includes('unemployment rate'), latestId: 'unemp', upcomingId: 'unemp_next' },
-                { key: 'cpi', match: t => t.includes('cpi') && !t.includes('core'), latestId: 'cpi', upcomingId: 'cpi_next' },
-                { key: 'ppi', match: t => t.includes('ppi'), latestId: 'ppi', upcomingId: 'ppi_next' },
-                { key: 'fomc', match: t => t.includes('federal funds rate') || t.includes('fomc'), latestId: 'fomc', upcomingId: 'fomc_next' }
+                {
+                    key: 'nfp',
+                    match: t => (t.includes('non-farm employment change') || t.includes('nonfarm payrolls')) && !t.includes('adp'),
+                    latestId: 'nfp',
+                    upcomingId: 'nfp_next'
+                },
+                {
+                    key: 'unemp',
+                    match: t => t.includes('unemployment rate'),
+                    latestId: 'unemp',
+                    upcomingId: 'unemp_next'
+                },
+                {
+                    key: 'pce',
+                    match: t => t.includes('core pce') && (t.includes('m/m') || t.includes('price index')),
+                    latestId: 'pce_core',
+                    upcomingId: 'pce_core_next'
+                },
+                {
+                    key: 'gdp',
+                    match: t => t.includes('gdp') && (t.includes('advance') || t.includes('prelim') || t.includes('final') || t.includes('q/q')),
+                    latestId: 'gdp_q3',
+                    upcomingId: 'gdp_q3_prelim'
+                },
+                {
+                    key: 'cpi',
+                    match: t => (t.includes('cpi y/y') || (t.includes('cpi') && t.includes('y/y'))) && !t.includes('core'),
+                    latestId: 'cpi',
+                    upcomingId: 'cpi_next'
+                },
+                {
+                    key: 'ppi',
+                    match: t => (t.includes('ppi m/m') || (t.includes('ppi') && t.includes('m/m'))) && !t.includes('core'),
+                    latestId: 'ppi',
+                    upcomingId: 'ppi_next'
+                },
+                {
+                    key: 'fomc',
+                    match: t => t.includes('federal funds rate') || (t.includes('fomc') && t.includes('rate')),
+                    latestId: 'fomc',
+                    upcomingId: 'fomc_next'
+                }
             ];
 
             categories.forEach(cat => {
@@ -1769,8 +1754,7 @@ async function fetchMacroCalendar() {
                     }
 
                     if (hasLiveActual) {
-                        // NEW ANNOUNCEMENT RELEASED!
-                        // Update Latest tab indicator: replace previous with freshly announced number
+                        // Update Latest tab indicator with announced number
                         const latestItem = data.latest.find(it => it.id === cat.latestId);
                         if (latestItem) {
                             latestItem.actual = matched.actual;
@@ -1780,7 +1764,7 @@ async function fetchMacroCalendar() {
                             stateChanged = true;
                         }
 
-                        // In Upcoming tab: since this cycle is announced, mark upcoming for next cycle
+                        // In Upcoming tab: update previous to current actual and clear for next cycle
                         const upItem = data.upcoming.find(it => it.id === cat.upcomingId);
                         if (upItem) {
                             upItem.previous = matched.actual;
