@@ -1,4 +1,4 @@
-﻿<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="th">
 <head>
     <meta charset="UTF-8">
@@ -469,7 +469,7 @@
                     💡 คู่มือการอ่านค่า
                 </button>
                 <span id="macroCalendarTime" style="font-size: 0.65rem; color: var(--text-muted); margin-left: 4px;">อัปเดต: กำลังโหลด...</span>
-                <button class="btn btn-ghost" style="padding: 0.15rem 0.45rem; font-size: 0.65rem; border-radius: 4px; margin-left: 4px;" onclick="fetchMacroCalendar()" title="ดึงข้อมูลตัวเลขเศรษฐกิจสดทันที">🔄 รีเฟรชสด</button>
+                <button id="macroSyncBtn" class="btn btn-primary" style="padding: 0.25rem 0.65rem; font-size: 0.68rem; font-weight: 600; border-radius: 6px; display: inline-flex; align-items: center; gap: 0.35rem; margin-left: 6px;" onclick="forceSyncMacroCalendar()" title="บังคับดึงข้อมูลปฏิทินเศรษฐกิจสดล่าสุดทันที"><span id="macroSyncIcon">🔄</span> ดึงข้อมูลสด (Live Sync)</button>
             </div>
         </div>
 
@@ -1805,6 +1805,24 @@ async function fetchMacroCalendar() {
         const data = getActiveMacroData();
         renderMacroCalendar(currentMacroTab === 'latest' ? data.latest : data.upcoming);
     }
+}
+
+async function forceSyncMacroCalendar() {
+    const btn = document.getElementById('macroSyncBtn');
+    const icon = document.getElementById('macroSyncIcon');
+    if (btn) btn.disabled = true;
+    if (icon) icon.classList.add('spinning');
+    if (typeof toast === 'function') toast('⏳ กำลังเชื่อมต่อดึงข้อมูลตัวเลขเศรษฐกิจสดล่าสุด...');
+
+    try {
+        localStorage.removeItem(MACRO_STORAGE_KEY);
+    } catch (e) {}
+
+    await fetchMacroCalendar();
+
+    if (btn) btn.disabled = false;
+    if (icon) icon.classList.remove('spinning');
+    if (typeof toast === 'function') toast('✅ ซิงค์ตัวเลขเศรษฐกิจสหรัฐฯ สดเรียบร้อยแล้ว');
 }
 
 /* ══════════════════════════════════════════
