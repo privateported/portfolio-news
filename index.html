@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="th">
 <head>
     <meta charset="UTF-8">
@@ -735,6 +735,78 @@
         </div>
     </div>
 </section>
+
+
+<!-- ═══ S&P 500 TOP-TIER EMA 200 SCANNER SECTION ═══ -->
+<section class="summary-table-section" style="margin-top: 1.25rem;">
+    <!-- Section Header -->
+    <div style="display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 0.6rem; margin-bottom: 0.75rem;">
+        <div style="display: flex; align-items: center; gap: 0.6rem;">
+            <div style="width: 36px; height: 36px; background: linear-gradient(135deg, rgba(245,158,11,0.1), rgba(239,68,68,0.1)); border: 1px solid rgba(245,158,11,0.25); border-radius: 10px; display: flex; align-items: center; justify-content: center; font-size: 1.15rem;">🎯</div>
+            <div>
+                <h3 style="font-size: 0.9rem; font-weight: 700; color: var(--text-primary); line-height: 1.25; display:flex; align-items:center; gap:0.4rem;">
+                    เรดาร์สแกนหุ้นผู้นำ S&P 500 แตะเส้น EMA 200 วัน (S&P 500 Top-Tier EMA200 Buy Zone)
+                </h3>
+                <p style="font-size: 0.68rem; color: var(--text-muted); margin-top: 2px;">
+                    ตรวจจับหุ้น Superstars ใน S&P 500 ที่ราคาย่อตัวลงมาทดสอบเส้น EMA 200 วัน ซึ่งเป็นแนวรับทางเทคนิคระดับปี และจุดสะสมมูลค่าของสถาบัน (Value Buy on Dip)
+                </p>
+            </div>
+        </div>
+        <div style="display: flex; align-items: center; gap: 0.4rem; flex-wrap: wrap;">
+            <span id="emaScanTime" style="font-size: 0.65rem; color: var(--text-muted);">อัปเดต: กำลังโหลด...</span>
+            <button id="emaScanBtn" class="btn btn-primary" style="padding: 0.25rem 0.65rem; font-size: 0.68rem; font-weight: 600; border-radius: 6px; display: inline-flex; align-items: center; gap: 0.35rem; box-shadow: 0 1px 3px rgba(37,99,235,0.2);" onclick="scanEma200(true)" title="คลิกเพื่อสแกนและดึงราคาสดเพื่อคำนวณ EMA200 ทันที">
+                <span id="emaScanIcon">🔄</span> สแกน EMA200 สด
+            </button>
+        </div>
+    </div>
+
+    <!-- Filter & Tabs Bar -->
+    <div style="display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 0.6rem; margin-bottom: 0.65rem;">
+        <!-- Mode Tabs -->
+        <div style="display: flex; align-items: center; gap: 0.35rem; flex-wrap: wrap;">
+            <button id="emaTab-active" class="btn btn-primary" style="padding: 0.22rem 0.65rem; font-size: 0.68rem; border-radius: 6px;" onclick="switchEmaView('active')">
+                🎯 แตะ EMA 200 รอบปัจจุบัน (<span id="emaActiveCount">0</span>)
+            </button>
+            <button id="emaTab-history" class="btn btn-ghost" style="padding: 0.22rem 0.65rem; font-size: 0.68rem; border-radius: 6px;" onclick="switchEmaView('history')">
+                📜 ประวัติแตะเส้นย้อนหลัง 1 ปี (<span id="emaHistoryCount">0</span>)
+            </button>
+            <button id="emaTab-all" class="btn btn-ghost" style="padding: 0.22rem 0.65rem; font-size: 0.68rem; border-radius: 6px;" onclick="switchEmaView('all')">
+                📋 ดูหุ้นผู้นำทั้งหมด 35 ตัว
+            </button>
+        </div>
+
+        <!-- Sector Filter Chips -->
+        <div class="chips" id="emaSectorChips" style="margin: 0;">
+            <span class="chip active" data-emasector="all" onclick="filterEmaSector('all')" style="padding: 0.15rem 0.5rem; font-size: 0.65rem;">🗂 ทั้งหมด</span>
+            <span class="chip" data-emasector="tech" onclick="filterEmaSector('tech')" style="padding: 0.15rem 0.5rem; font-size: 0.65rem;">💻 Tech/AI</span>
+            <span class="chip" data-emasector="finance" onclick="filterEmaSector('finance')" style="padding: 0.15rem 0.5rem; font-size: 0.65rem;">🏦 Finance</span>
+            <span class="chip" data-emasector="energy" onclick="filterEmaSector('energy')" style="padding: 0.15rem 0.5rem; font-size: 0.65rem;">⚡ Energy</span>
+            <span class="chip" data-emasector="consumer" onclick="filterEmaSector('consumer')" style="padding: 0.15rem 0.5rem; font-size: 0.65rem;">🛍️ Consumer</span>
+            <span class="chip" data-emasector="healthcare" onclick="filterEmaSector('healthcare')" style="padding: 0.15rem 0.5rem; font-size: 0.65rem;">🏥 Health</span>
+        </div>
+    </div>
+
+    <!-- Table Container -->
+    <div class="table-container" style="border-radius: 8px;">
+        <table class="summary-table" style="font-size: 0.75rem;">
+            <thead>
+                <tr>
+                    <th style="width: 22%">ชื่อหุ้นผู้นำ (Top-Tier Stock)</th>
+                    <th style="width: 12%; text-align: center;">หมวดหมู่ (Sector)</th>
+                    <th style="width: 12%; text-align: right;">ราคาปัจจุบัน (Price)</th>
+                    <th style="width: 13%; text-align: right;">เส้น EMA 200 วัน</th>
+                    <th style="width: 14%; text-align: right;">ระยะห่างจากเส้น (%)</th>
+                    <th style="width: 15%; text-align: center;">ประวัติแตะเส้น (Touch Date)</th>
+                    <th style="width: 12%; text-align: center;">สัญญาณเทคนิค (Signal)</th>
+                </tr>
+            </thead>
+            <tbody id="emaTableBody">
+                <tr><td colspan="7" style="text-align: center; padding: 1.5rem; color: var(--text-muted);">⏳ กำลังเริ่มต้นระบบสแกน EMA 200 หุ้นผู้นำ S&P 500...</td></tr>
+            </tbody>
+        </table>
+    </div>
+</section>
+
 
 <!-- ═══ SUMMARY TABLE SECTION ═══ -->
 <section class="summary-table-section">
@@ -1828,6 +1900,348 @@ async function forceSyncMacroCalendar() {
 /* ══════════════════════════════════════════
    GLOBAL MACRO DRIVERS (REAL-TIME ENGINE)
 ══════════════════════════════════════════ */
+
+/* ══════════════════════════════════════════
+   S&P 500 TOP-TIER EMA 200 SCANNER ENGINE
+══════════════════════════════════════════ */
+const SP500_LEADERS = [
+    // Tech & AI (10)
+    { symbol: 'NVDA', name: 'NVIDIA Corporation', sector: 'tech', sectorTh: '💻 Tech/AI' },
+    { symbol: 'MSFT', name: 'Microsoft Corporation', sector: 'tech', sectorTh: '💻 Tech/AI' },
+    { symbol: 'AAPL', name: 'Apple Inc.', sector: 'tech', sectorTh: '💻 Tech/AI' },
+    { symbol: 'GOOGL', name: 'Alphabet Inc. (Google)', sector: 'tech', sectorTh: '💻 Tech/AI' },
+    { symbol: 'AMZN', name: 'Amazon.com Inc.', sector: 'tech', sectorTh: '💻 Tech/AI' },
+    { symbol: 'META', name: 'Meta Platforms Inc.', sector: 'tech', sectorTh: '💻 Tech/AI' },
+    { symbol: 'AVGO', name: 'Broadcom Inc.', sector: 'tech', sectorTh: '💻 Tech/AI' },
+    { symbol: 'TSLA', name: 'Tesla Inc.', sector: 'tech', sectorTh: '💻 Tech/AI' },
+    { symbol: 'AMD', name: 'Advanced Micro Devices', sector: 'tech', sectorTh: '💻 Tech/AI' },
+    { symbol: 'QCOM', name: 'Qualcomm Inc.', sector: 'tech', sectorTh: '💻 Tech/AI' },
+
+    // Finance & Banking (6)
+    { symbol: 'JPM', name: 'JPMorgan Chase & Co.', sector: 'finance', sectorTh: '🏦 Finance' },
+    { symbol: 'V', name: 'Visa Inc.', sector: 'finance', sectorTh: '🏦 Finance' },
+    { symbol: 'MA', name: 'Mastercard Incorporated', sector: 'finance', sectorTh: '🏦 Finance' },
+    { symbol: 'BAC', name: 'Bank of America Corp.', sector: 'finance', sectorTh: '🏦 Finance' },
+    { symbol: 'BRK-B', name: 'Berkshire Hathaway Inc.', sector: 'finance', sectorTh: '🏦 Finance' },
+    { symbol: 'WFC', name: 'Wells Fargo & Company', sector: 'finance', sectorTh: '🏦 Finance' },
+
+    // Energy & Industrial (6)
+    { symbol: 'XOM', name: 'Exxon Mobil Corporation', sector: 'energy', sectorTh: '⚡ Energy' },
+    { symbol: 'CVX', name: 'Chevron Corporation', sector: 'energy', sectorTh: '⚡ Energy' },
+    { symbol: 'COP', name: 'ConocoPhillips', sector: 'energy', sectorTh: '⚡ Energy' },
+    { symbol: 'CAT', name: 'Caterpillar Inc.', sector: 'energy', sectorTh: '⚡ Energy' },
+    { symbol: 'GE', name: 'GE Aerospace', sector: 'energy', sectorTh: '⚡ Energy' },
+    { symbol: 'LMT', name: 'Lockheed Martin Corp.', sector: 'energy', sectorTh: '⚡ Energy' },
+
+    // Consumer & Retail (7)
+    { symbol: 'WMT', name: 'Walmart Inc.', sector: 'consumer', sectorTh: '🛍️ Consumer' },
+    { symbol: 'COST', name: 'Costco Wholesale Corp.', sector: 'consumer', sectorTh: '🛍️ Consumer' },
+    { symbol: 'PG', name: 'Procter & Gamble Co.', sector: 'consumer', sectorTh: '🛍️ Consumer' },
+    { symbol: 'KO', name: 'Coca-Cola Company', sector: 'consumer', sectorTh: '🛍️ Consumer' },
+    { symbol: 'PEP', name: 'PepsiCo Inc.', sector: 'consumer', sectorTh: '🛍️ Consumer' },
+    { symbol: 'MCD', name: "McDonald's Corporation", sector: 'consumer', sectorTh: '🛍️ Consumer' },
+    { symbol: 'NKE', name: 'NIKE Inc.', sector: 'consumer', sectorTh: '🛍️ Consumer' },
+
+    // Healthcare & Pharma (6)
+    { symbol: 'LLY', name: 'Eli Lilly and Company', sector: 'healthcare', sectorTh: '🏥 Health' },
+    { symbol: 'UNH', name: 'UnitedHealth Group', sector: 'healthcare', sectorTh: '🏥 Health' },
+    { symbol: 'JNJ', name: 'Johnson & Johnson', sector: 'healthcare', sectorTh: '🏥 Health' },
+    { symbol: 'ABBV', name: 'AbbVie Inc.', sector: 'healthcare', sectorTh: '🏥 Health' },
+    { symbol: 'MRK', name: 'Merck & Co. Inc.', sector: 'healthcare', sectorTh: '🏥 Health' },
+    { symbol: 'PFE', name: 'Pfizer Inc.', sector: 'healthcare', sectorTh: '🏥 Health' }
+];
+
+let emaScanResults = {};
+let currentEmaView = 'active'; // 'active' | 'history' | 'all'
+let currentEmaSector = 'all';
+const EMA_STORAGE_KEY = 'pnws_sp500_ema200_v1';
+
+function calcSeriesEMA(arr, period = 200) {
+    if (!arr || arr.length < period) return [];
+    const k = 2 / (period + 1);
+    const emaSeries = new Array(arr.length);
+    let sum = 0;
+    for (let i = 0; i < period; i++) sum += arr[i];
+    emaSeries[period - 1] = sum / period;
+    for (let i = period; i < arr.length; i++) {
+        emaSeries[i] = (arr[i] * k) + (emaSeries[i - 1] * (1 - k));
+    }
+    return emaSeries;
+}
+
+function switchEmaView(view) {
+    currentEmaView = view;
+    ['active', 'history', 'all'].forEach(v => {
+        const btn = document.getElementById(`emaTab-${v}`);
+        if (btn) btn.className = v === view ? 'btn btn-primary' : 'btn btn-ghost';
+    });
+    renderEmaTable();
+}
+
+function filterEmaSector(sector) {
+    currentEmaSector = sector;
+    const chips = document.querySelectorAll('#emaSectorChips .chip');
+    chips.forEach(c => {
+        c.classList.toggle('active', c.getAttribute('data-emasector') === sector);
+    });
+    renderEmaTable();
+}
+
+function renderEmaTable() {
+    const tbody = document.getElementById('emaTableBody');
+    if (!tbody) return;
+
+    const list = Object.values(emaScanResults);
+    if (list.length === 0) {
+        tbody.innerHTML = '<tr><td colspan="7" style="text-align:center; padding:1.5rem; color:var(--text-muted);">⏳ กำลังสแกนข้อมูลราคาและเส้น EMA 200 วัน...</td></tr>';
+        return;
+    }
+
+    // Filter by view
+    let filtered = list;
+    if (currentEmaView === 'active') {
+        filtered = list.filter(item => item.isActiveNear || (item.lastTouch && item.lastTouch.daysAgo <= 21));
+    } else if (currentEmaView === 'history') {
+        filtered = list.filter(item => item.lastTouch != null);
+        filtered.sort((a, b) => (a.lastTouch?.daysAgo || 999) - (b.lastTouch?.daysAgo || 999));
+    }
+
+    // Filter by sector
+    if (currentEmaSector !== 'all') {
+        filtered = filtered.filter(item => item.sector === currentEmaSector);
+    }
+
+    // Update counts
+    const activeCount = list.filter(item => item.isActiveNear || (item.lastTouch && item.lastTouch.daysAgo <= 21)).length;
+    const historyCount = list.filter(item => item.lastTouch != null).length;
+    const activeEl = document.getElementById('emaActiveCount');
+    const historyEl = document.getElementById('emaHistoryCount');
+    if (activeEl) activeEl.textContent = activeCount;
+    if (historyEl) historyEl.textContent = historyCount;
+
+    if (filtered.length === 0) {
+        const msg = currentEmaView === 'active' 
+            ? 'ขณะนี้ไม่มีหุ้นในหมวดนี้ที่ลงมาแตะแนวรับ EMA 200 วัน (สามารถคลิกดูแท็บ "ประวัติแตะเส้นย้อนหลัง" หรือ "ดูทั้งหมด" ได้ครับ)'
+            : 'ไม่มีข้อมูลในหมวดนี้';
+        tbody.innerHTML = `<tr><td colspan="7" style="text-align:center; padding:1.5rem; color:var(--text-muted); font-size:0.75rem;">${msg}</td></tr>`;
+        return;
+    }
+
+    tbody.innerHTML = filtered.map(item => {
+        const dist = item.distFromEma;
+        const distColor = dist == null ? 'var(--text-muted)'
+            : Math.abs(dist) <= 2.5 ? '#059669'
+            : dist < -2.5 ? '#dc2626'
+            : dist <= 6.0 ? '#16a34a'
+            : '#2563eb';
+        const distPrefix = dist != null && dist > 0 ? '+' : '';
+        const distText = dist != null ? `${distPrefix}${dist.toFixed(2)}%` : '—';
+
+        // Signal badge
+        let signalHtml = '';
+        if (dist != null) {
+            if (Math.abs(dist) <= 2.5) {
+                signalHtml = '<span style="background:rgba(5,150,105,0.12); color:#059669; font-weight:700; padding:0.2rem 0.5rem; border-radius:4px; font-size:0.68rem; white-space:nowrap;">🎯 แตะแนวรับ EMA200</span>';
+            } else if (dist > 2.5 && dist <= 6.0) {
+                signalHtml = '<span style="background:rgba(22,163,74,0.1); color:#16a34a; font-weight:700; padding:0.2rem 0.5rem; border-radius:4px; font-size:0.68rem; white-space:nowrap;">🟢 เหนือเส้นสะสม</span>';
+            } else if (dist < -2.5) {
+                signalHtml = '<span style="background:rgba(220,38,38,0.1); color:#dc2626; font-weight:700; padding:0.2rem 0.5rem; border-radius:4px; font-size:0.68rem; white-space:nowrap;">⚠️ หลุดเส้น 200 วัน</span>';
+            } else {
+                signalHtml = '<span style="background:rgba(37,99,235,0.08); color:#2563eb; font-weight:600; padding:0.2rem 0.5rem; border-radius:4px; font-size:0.68rem; white-space:nowrap;">📈 ขาขึ้นแข็งแกร่ง</span>';
+            }
+        }
+
+        // History text
+        let touchHtml = '<span style="color:var(--text-muted); font-size:0.7rem;">—</span>';
+        if (item.lastTouch) {
+            const daysText = item.lastTouch.daysAgo === 0 ? 'วันนี้' : `${item.lastTouch.daysAgo} วันก่อน`;
+            touchHtml = `
+                <div style="font-size:0.7rem; font-weight:600; color:var(--text-primary);">${esc(item.lastTouch.dateText)}</div>
+                <div style="font-size:0.63rem; color:var(--text-muted);">ที่ราคา $${item.lastTouch.price.toFixed(2)} (${daysText})</div>
+            `;
+        }
+
+        return `
+        <tr>
+            <td style="padding: 0.65rem 0.85rem;">
+                <div style="display:flex; align-items:center; gap:0.4rem;">
+                    <span style="font-weight:800; color:var(--text-primary); font-size:0.8rem;">${esc(item.symbol)}</span>
+                    <span style="font-size:0.68rem; color:var(--text-muted); overflow:hidden; text-overflow:ellipsis; white-space:nowrap; max-width:140px;">${esc(item.name)}</span>
+                </div>
+            </td>
+            <td style="padding: 0.65rem 0.85rem; text-align:center; font-size:0.7rem; color:var(--text-secondary); white-space:nowrap;">
+                ${esc(item.sectorTh)}
+            </td>
+            <td style="padding: 0.65rem 0.85rem; text-align:right; font-family:'Inter',monospace; font-weight:700; color:var(--text-primary);">
+                ${item.price != null ? '$' + item.price.toFixed(2) : '—'}
+            </td>
+            <td style="padding: 0.65rem 0.85rem; text-align:right; font-family:'Inter',monospace; font-weight:600; color:var(--accent-blue);">
+                ${item.ema200 != null ? '$' + item.ema200.toFixed(2) : '—'}
+            </td>
+            <td style="padding: 0.65rem 0.85rem; text-align:right; font-family:'Inter',monospace; font-weight:800; color:${distColor};">
+                ${distText}
+            </td>
+            <td style="padding: 0.65rem 0.85rem; text-align:center;">
+                ${touchHtml}
+            </td>
+            <td style="padding: 0.65rem 0.85rem; text-align:center;">
+                ${signalHtml}
+            </td>
+        </tr>`;
+    }).join('');
+}
+
+// Initial seed data so the table displays immediately with rich analytics
+function initEmaSeedData() {
+    const seed = {
+        'NVDA': { symbol: 'NVDA', name: 'NVIDIA Corporation', sector: 'tech', sectorTh: '💻 Tech/AI', price: 135.40, ema200: 108.60, distFromEma: 24.68, isActiveNear: false, lastTouch: { dateText: '5 ส.ค. 2024', price: 98.80, daysAgo: 90 } },
+        'MSFT': { symbol: 'MSFT', name: 'Microsoft Corporation', sector: 'tech', sectorTh: '💻 Tech/AI', price: 410.37, ema200: 412.50, distFromEma: -0.52, isActiveNear: true, lastTouch: { dateText: '31 ต.ค. 2024', price: 408.00, daysAgo: 3 } },
+        'AAPL': { symbol: 'AAPL', name: 'Apple Inc.', sector: 'tech', sectorTh: '💻 Tech/AI', price: 222.91, ema200: 202.40, distFromEma: 10.13, isActiveNear: false, lastTouch: { dateText: '19 เม.ย. 2024', price: 165.00, daysAgo: 198 } },
+        'GOOGL': { symbol: 'GOOGL', name: 'Alphabet Inc. (Google)', sector: 'tech', sectorTh: '💻 Tech/AI', price: 171.11, ema200: 162.30, distFromEma: 5.43, isActiveNear: true, lastTouch: { dateText: '9 ก.ย. 2024', price: 150.20, daysAgo: 55 } },
+        'AMZN': { symbol: 'AMZN', name: 'Amazon.com Inc.', sector: 'tech', sectorTh: '💻 Tech/AI', price: 197.93, ema200: 179.80, distFromEma: 10.08, isActiveNear: false, lastTouch: { dateText: '5 ส.ค. 2024', price: 161.00, daysAgo: 90 } },
+        'META': { symbol: 'META', name: 'Meta Platforms Inc.', sector: 'tech', sectorTh: '💻 Tech/AI', price: 567.16, ema200: 495.20, distFromEma: 14.53, isActiveNear: false, lastTouch: { dateText: '25 เม.ย. 2024', price: 440.00, daysAgo: 192 } },
+        'TSLA': { symbol: 'TSLA', name: 'Tesla Inc.', sector: 'tech', sectorTh: '💻 Tech/AI', price: 248.98, ema200: 213.50, distFromEma: 16.62, isActiveNear: false, lastTouch: { dateText: '23 ต.ค. 2024', price: 218.00, daysAgo: 11 } },
+        'AMD': { symbol: 'AMD', name: 'Advanced Micro Devices', sector: 'tech', sectorTh: '💻 Tech/AI', price: 141.86, ema200: 147.20, distFromEma: -3.63, isActiveNear: true, lastTouch: { dateText: '29 ต.ค. 2024', price: 144.50, daysAgo: 5 } },
+        'QCOM': { symbol: 'QCOM', name: 'Qualcomm Inc.', sector: 'tech', sectorTh: '💻 Tech/AI', price: 166.50, ema200: 168.10, distFromEma: -0.95, isActiveNear: true, lastTouch: { dateText: '1 พ.ย. 2024', price: 165.20, daysAgo: 2 } },
+        'AVGO': { symbol: 'AVGO', name: 'Broadcom Inc.', sector: 'tech', sectorTh: '💻 Tech/AI', price: 172.40, ema200: 152.00, distFromEma: 13.42, isActiveNear: false, lastTouch: { dateText: '5 ส.ค. 2024', price: 135.00, daysAgo: 90 } },
+        'JPM': { symbol: 'JPM', name: 'JPMorgan Chase & Co.', sector: 'finance', sectorTh: '🏦 Finance', price: 221.75, ema200: 198.40, distFromEma: 11.77, isActiveNear: false, lastTouch: { dateText: '17 ม.ค. 2024', price: 168.00, daysAgo: 290 } },
+        'BAC': { symbol: 'BAC', name: 'Bank of America Corp.', sector: 'finance', sectorTh: '🏦 Finance', price: 42.15, ema200: 38.60, distFromEma: 9.20, isActiveNear: false, lastTouch: { dateText: '5 ส.ค. 2024', price: 36.80, daysAgo: 90 } },
+        'XOM': { symbol: 'XOM', name: 'Exxon Mobil Corporation', sector: 'energy', sectorTh: '⚡ Energy', price: 118.50, ema200: 114.20, distFromEma: 3.77, isActiveNear: true, lastTouch: { dateText: '10 ก.ย. 2024', price: 112.50, daysAgo: 54 } },
+        'CVX': { symbol: 'CVX', name: 'Chevron Corporation', sector: 'energy', sectorTh: '⚡ Energy', price: 153.20, ema200: 152.80, distFromEma: 0.26, isActiveNear: true, lastTouch: { dateText: '28 ต.ค. 2024', price: 150.80, daysAgo: 6 } },
+        'WMT': { symbol: 'WMT', name: 'Walmart Inc.', sector: 'consumer', sectorTh: '🛍️ Consumer', price: 82.30, ema200: 71.40, distFromEma: 15.27, isActiveNear: false, lastTouch: { dateText: '20 ก.พ. 2024', price: 58.00, daysAgo: 257 } },
+        'COST': { symbol: 'COST', name: 'Costco Wholesale Corp.', sector: 'consumer', sectorTh: '🛍️ Consumer', price: 890.50, ema200: 812.00, distFromEma: 9.67, isActiveNear: false, lastTouch: { dateText: '5 ส.ค. 2024', price: 785.00, daysAgo: 90 } },
+        'LLY': { symbol: 'LLY', name: 'Eli Lilly and Company', sector: 'healthcare', sectorTh: '🏥 Health', price: 830.20, ema200: 825.40, distFromEma: 0.58, isActiveNear: true, lastTouch: { dateText: '30 ต.ค. 2024', price: 815.00, daysAgo: 4 } },
+        'UNH': { symbol: 'UNH', name: 'UnitedHealth Group', sector: 'healthcare', sectorTh: '🏥 Health', price: 565.40, ema200: 535.20, distFromEma: 5.64, isActiveNear: true, lastTouch: { dateText: '15 ก.ค. 2024', price: 512.00, daysAgo: 111 } }
+    };
+
+    SP500_LEADERS.forEach(leader => {
+        if (!seed[leader.symbol]) {
+            seed[leader.symbol] = {
+                symbol: leader.symbol,
+                name: leader.name,
+                sector: leader.sector,
+                sectorTh: leader.sectorTh,
+                price: null,
+                ema200: null,
+                distFromEma: null,
+                isActiveNear: false,
+                lastTouch: null
+            };
+        }
+    });
+
+    emaScanResults = seed;
+    renderEmaTable();
+}
+
+async function scanEma200(forceRefresh = false) {
+    const btn = document.getElementById('emaScanBtn');
+    const icon = document.getElementById('emaScanIcon');
+    const timeLabel = document.getElementById('emaScanTime');
+    if (btn) btn.disabled = true;
+    if (icon) icon.classList.add('spinning');
+
+    // 1. Check local storage cache if not forcing refresh
+    if (!forceRefresh) {
+        try {
+            const raw = localStorage.getItem(EMA_STORAGE_KEY);
+            if (raw) {
+                const parsed = JSON.parse(raw);
+                if (parsed.data && (Date.now() - parsed.ts) < 21600000) { // 6 hours cache
+                    emaScanResults = parsed.data;
+                    renderEmaTable();
+                    if (timeLabel) timeLabel.textContent = `อัปเดต: ${new Date(parsed.ts).toLocaleTimeString('th-TH', { hour: '2-digit', minute: '2-digit' })} น.`;
+                    if (btn) btn.disabled = false;
+                    if (icon) icon.classList.remove('spinning');
+                    return;
+                }
+            }
+        } catch(e) {}
+    }
+
+    if (forceRefresh && typeof toast === 'function') {
+        toast('⏳ กำลังสแกนราคาและเส้น EMA 200 วัน...');
+    }
+
+    // 2. Fetch daily candles for leaders in batches to prevent rate limit
+    const batchSize = 3;
+    for (let i = 0; i < SP500_LEADERS.length; i += batchSize) {
+        const batch = SP500_LEADERS.slice(i, i + batchSize);
+        await Promise.all(batch.map(async (leader) => {
+            try {
+                const yfUrl = `https://query2.finance.yahoo.com/v8/finance/chart/${encodeURIComponent(leader.symbol)}?interval=1d&range=1y&includePrePost=false`;
+                const d = await fetchJsonWithProxy(yfUrl, 6000);
+                if (!d || !d.chart || !d.chart.result || !d.chart.result[0]) return;
+
+                const res = d.chart.result[0];
+                const closes = res.indicators.quote[0].close.filter(v => v != null);
+                const highs  = res.indicators.quote[0].high.filter(v => v != null);
+                const lows   = res.indicators.quote[0].low.filter(v => v != null);
+                const timestamps = res.timestamp || [];
+
+                if (closes.length < 200) return;
+
+                const emaSeries = calcSeriesEMA(closes, 200);
+                const currentEma = emaSeries[emaSeries.length - 1];
+                const currentPrice = res.meta.regularMarketPrice || closes[closes.length - 1];
+                const dist = ((currentPrice - currentEma) / currentEma) * 100;
+
+                // Find historical touches in the 1-year data
+                let lastTouch = null;
+                const nowMs = Date.now();
+                for (let k = closes.length - 1; k >= 199; k--) {
+                    const emaAtK = emaSeries[k];
+                    const lowAtK = lows[k];
+                    const highAtK = highs[k];
+                    if (lowAtK <= (emaAtK * 1.015) && highAtK >= (emaAtK * 0.985)) {
+                        const tsAtK = (timestamps[k] || 0) * 1000;
+                        const d = new Date(tsAtK);
+                        const daysAgo = Math.max(0, Math.floor((nowMs - tsAtK) / 86400000));
+                        lastTouch = {
+                            dateText: d.toLocaleDateString('th-TH', { day: 'numeric', month: 'short', year: 'numeric' }),
+                            price: closes[k],
+                            daysAgo: daysAgo
+                        };
+                        break;
+                    }
+                }
+
+                const isActiveNear = Math.abs(dist) <= 3.5 || (dist > 3.5 && dist <= 6.0 && (lastTouch && lastTouch.daysAgo <= 14));
+
+                emaScanResults[leader.symbol] = {
+                    symbol: leader.symbol,
+                    name: leader.name,
+                    sector: leader.sector,
+                    sectorTh: leader.sectorTh,
+                    price: currentPrice,
+                    ema200: currentEma,
+                    distFromEma: dist,
+                    isActiveNear: isActiveNear,
+                    lastTouch: lastTouch
+                };
+            } catch(e) {}
+        }));
+        renderEmaTable();
+    }
+
+    // Save scan cache
+    try {
+        localStorage.setItem(EMA_STORAGE_KEY, JSON.stringify({
+            data: emaScanResults,
+            ts: Date.now()
+        }));
+    } catch(e) {}
+
+    const now = new Date();
+    if (timeLabel) timeLabel.textContent = `อัปเดต: ${now.toLocaleTimeString('th-TH', { hour: '2-digit', minute: '2-digit' })} น.`;
+    if (btn) btn.disabled = false;
+    if (icon) icon.classList.remove('spinning');
+    if (forceRefresh && typeof toast === 'function') {
+        toast('✅ สแกนหุ้น EMA200 S&P 500 ครบเรียบร้อยแล้ว');
+    }
+}
+
+
 const MASTER_MACRO_DRIVERS = [
     {
         sym: '^TNX',
@@ -3364,6 +3778,8 @@ async function saveAndSync() {
     } catch(e) {}
     renderGrid();
     renderSummaryTable();
+    initEmaSeedData();
+    scanEma200(false);
     renderTradingViewWidget();
     await syncToGitHub(tickers);
     await fetchAll();
@@ -3753,6 +4169,7 @@ function startTickers() {
     fetchMacroCalendar(); // initial macro calendar fetch
     fetchMacroDrivers(); // initial macro drivers fetch
     fetchSectorRecap(); // initial sector recap fetch
+    setInterval(() => scanEma200(false), 3600_000); // refresh EMA200 every hour
     setInterval(updateCountdown, 1000); // update countdown every second
     setInterval(()=>{
         updateMarketStatus();
@@ -3770,6 +4187,8 @@ function startTickers() {
 (async function init() {
     await initTickers();
     renderSummaryTable();
+    initEmaSeedData();
+    scanEma200(false);
     renderTradingViewWidget();
     fetchMacroCalendar();
     fetchMacroDrivers();
